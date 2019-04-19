@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <math.h>
 
 using namespace std;
 
@@ -105,7 +106,7 @@ void leitura_arquivo(grafo *g_um, grafo *g_tele_um, int *n_vertices, int *m_tele
 	grafo g_tele = *g_tele_um;
 
 	if(!file){
-		cerr << "Unable to open file!";
+		cerr << "Não foi possível abrir o arquivo!";
 		exit(1);
 	}
 
@@ -114,11 +115,20 @@ void leitura_arquivo(grafo *g_um, grafo *g_tele_um, int *n_vertices, int *m_tele
 			n = valor; // número de postos de combate
 			*n_vertices = n;
 			g.v.resize(n);
+			if(n < 10 || n> pow(10, 5)){
+				cerr << "N em valores não permitidos!";
+				exit(1);
+			}
 		}
 		else if (flag == 1){
 			m = valor; // quantidade total de teleportes possíveis
 			*m_tele = m;
 			g_tele.v.resize(n);
+			if(m < 8 || m> pow(10, 6)){
+				cerr << "M em valores não permitidos!";
+				exit(1);
+			}
+
 		}
 		else if(m + 1 != g_tele.id_vertices.size()){
 			if(flag % 2 == 0){
@@ -166,8 +176,6 @@ int dfs_bipartido(grafo g, int i, int cor){ //eu tenho que passar aqui por param
 	int index, bipartido;
 	for(int k=0;k<g.v[i].adj.size();k++){
 		index = verifica_valor(g, g.v[i].adj[k].id);
-		cout << "Pai " << g.v[i].id << " Filho " << g.v[index].id << "\n";
-		cout << "Cor pai " << g.v[i].cor << " Cor Filho " << g.v[index].cor << "\n";
 		if(g.v[index].cor == -1){ // a cor ainda não foi alterada
 			bipartido = dfs_bipartido(g, index, 1-cor);
 			if(bipartido==-1){
@@ -275,8 +283,8 @@ void identifica_nave(grafo g_tele){
 			t = quarto_tipo(g_temp);
 		}
 		cout << t << "\n";
-		g_temp.v.clear();
-		g_temp.id_vertices.clear();
+		g_temp.v.clear(); // limpando a lista de vértices adjacências
+		g_temp.id_vertices.clear(); // limpando a lista de id de vértices
 
 	}
 
