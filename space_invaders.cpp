@@ -21,7 +21,6 @@ class grafo{
 	vector <vertices> v; // guarda a os vértices
 	vector <int> id_vertices; //guarda o id dos vértices
 	int num_componentes;
-	int bipartido = 2; // vai ser utilizado para identificar se o grafo é bipartido
 };
 
 int verifica_valor(grafo g, int valor){
@@ -170,51 +169,69 @@ grafo dfs_visit(grafo g, int i, int *tempo){
 	g.v[i].tempo_f = *tempo;
 	return g;
 }
-int dfs_bipartido(grafo g, int i, int cor){ //eu tenho que passar aqui por parametro, o grafo
-	
-	g.v[i].cor = cor;
+int dfs_bipartido(grafo *g_aux)
+{
+	/*
+		Está função é responsável por identificar se um grafo é bipartido ou não.
+		Para isso, ela associa cores aos vértices. 
+		Caso ela consiga colocar vizinhos sempre com cores diferentes (0 ou 1),
+		então o grafo é bipartido.
+
+		Essa função é utilizada no terceiro método. Por meio das cores é possível
+		definir se o vértice é bipartido e se ele satisfaz as requisições do quarto
+		método.
+
+		Esse algoritmo é uma variação do DFS.
+
+		Parâmetros:
+			grafo g;
+	*/
+	grafo g = *g_aux;
 	int index, bipartido;
-	for(int k=0;k<g.v[i].adj.size();k++){
-		index = verifica_valor(g, g.v[i].adj[k].id);
-		if(g.v[index].cor == -1){ // a cor ainda não foi alterada
-			bipartido = dfs_bipartido(g, index, 1-cor);
-			if(bipartido==-1){
-				return -1;
+	g.v[0].cor = 0; // o primeiro vértice vai ter cor 0
+	for(int i = 0; i<g.v.size();i++)
+	{
+		for(int k=0;k<g.v[i].adj.size();k++)
+		{
+			index = verifica_valor(g, g.v[i].adj[k].id);
+			if(g.v[index].cor == -1)
+			{ // quer dizer que o vértice ainda não foi visitado
+				if(g.v[i].cor == 0)
+				{	
+					g.v[index].cor = 1;
+				}
+				else
+				{
+					g.v[index].cor = 0;
+				}
+			}
+			else
+			{ // quer dizer que ele já foi visitado
+				if(g.v[i].cor == g.v[index].cor)
+				{ 
+				/*
+				 	Quer dizer que ele e o vizinho possuem a mesma cor, 
+				 	então o grafo não é bipartido.
+				*/
+					return -1;	
+				}
+
 			}
 		}
-		else{
-			if(g.v[index].cor == cor){ 
-				// a cor do vizinho tem que ser diferente para ser bipartido
-				return -1;
-			}
-		}
+
 	}
+	*g_aux = g;
 	return 0;
 }
-grafo dfs(grafo g, int param_bipartido){ // 0 false 1 true
+grafo dfs(grafo g){ // 0 false 1 true
 
 	int tempo = 0;
 	int componentes = 0;
-	int bipartido;
 	for(int i=0;i<g.v.size();i++){
-		if (param_bipartido == 0 && g.v[i].flag == 0 && g.v[i].id != 0){ // quer dizer que a cor é branca
+		if (g.v[i].flag == 0 && g.v[i].id != 0){ // quer dizer que a cor é branca
 			componentes = componentes + 1;
 			g.v[i].componente = componentes;
 			g = dfs_visit(g, i, &tempo);
-
-		}
-		else if (param_bipartido == 1 && g.v[i].id != 0){
-			if(g.v[i].cor == -1){
-				bipartido = dfs_bipartido(g, i, 0);
-				if(bipartido == -1){
-					g.bipartido = -1;
-				}
-				else{ // caso seja bipartido
-					g.bipartido = 0;
-				}
-			}
-			cout << "Bipartido ? "<< g.bipartido << "\n";
-			break;
 		}
 	}
 	g.num_componentes = componentes;
@@ -260,7 +277,8 @@ int primeiro_tipo(grafo g){
 	}
 	return 1;
 }
-int quarto_tipo(grafo g){
+int quarto_tipo(grafo g)
+{
 	// no quarto tipo dos os vértices tem que ter degree igual
 	int degree = g.v[0].adj.size();
 	for(int i = 1; i<g.v.size();i++){ 
@@ -270,24 +288,126 @@ int quarto_tipo(grafo g){
 	}
 	return 1;
 }
+int terceiro_tipo(grafo g)
+{ 	/* 
+	   Neste caso, o tamanho da lista de adjacência tem que ser igual ao número
+	   de vértices com cor oposta ao vértice avaliado. O grafo deve ser bipartido.
 
-void identifica_nave(grafo g_tele){
+	   Desta maneira, se a cor do vértice é 1, ele deve estar conectado com todos os
+	   vértices de cor 2.
 
-	g_tele = dfs(g_tele, 0); // calculo a busca em profundidade
-	int quant_naves = g_tele.num_componentes, index, t;
-	grafo g_temp;
-	for(int i=0;i<quant_naves;i++){
-		g_temp = componente_grafo(g_tele, i);
-		t = primeiro_tipo(g_temp);
-		if(t==-1){
-			t = quarto_tipo(g_temp);
+	   Parâmetros: 
+	   		grafo g;
+	*/
+
+	int bipartido = dfs_bipartido(&g); // cor inicial é 0
+	int cont, index = 0;
+	int quant_branco=0, quant_preto=0;
+	int casos_certos=0;
+	for(int i=0;i<g.v.size();i++)
+	{
+		if(g.v[i].cor == 0)
+		{
+			quant_branco++;
 		}
-		cout << t << "\n";
-		g_temp.v.clear(); // limpando a lista de vértices adjacências
-		g_temp.id_vertices.clear(); // limpando a lista de id de vértices
+		else
+		{
+			quant_preto++;
+		}
 
 	}
+	if(bipartido == 0)
+	{
+		for(int i=0;i<g.v.size();i++)
+		{
+			cont = 0;
+			for(int j=0;j<g.v[i].adj.size();j++)
+			{
+				index = verifica_valor(g, g.v[i].adj[j].id);
+				if(g.v[index].cor != g.v[i].cor)
+				{
+					cont++;
+				}
+			}
+			if(g.v[i].cor == 0 && cont == quant_preto && cont == g.v[i].adj.size())
+			{ 
+				casos_certos++;
+			}
+			else if(g.v[i].cor == 1 && cont == quant_branco && cont == g.v[i].adj.size())
+			{
+				casos_certos++;
+			}
+		}
+		if(casos_certos == g.id_vertices.size()){
+			return 0;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	else
+	{
+		return -1;
+	}
+}
+int segundo_tipo(grafo g)
+{
+	/*
+		Método responsável por identificar o segundo tipo de nave.
 
+		Pela descrição possui t-1 postos possíveis transferências,
+		ou seja, número de vértices == número de arestas - 1.
+
+		Parâmetros:
+			grafo g_comp --> grafo de componente;
+	*/
+	int num_arestas = 0;
+	for(int i=0;i<g.v.size();i++)
+	{
+		for(int j=0;j<g.v[i].adj.size();i++)
+		{
+			num_arestas++;
+		}
+	}
+	cout << g.v.size() << " " << (num_arestas) << "\n";
+	if(g.v.size() == (num_arestas)-1)
+	{
+		return 0;
+	}
+
+	return -1;
+}
+void identifica_nave(grafo g_tele){
+
+	g_tele = dfs(g_tele); // calculo a busca em profundidade
+	int quant_naves = g_tele.num_componentes;
+	int t1 = 0, t2 = 0, t3 = 0, t4 = 0;
+	grafo g_temp;
+	for(int i=0;i<quant_naves;i++)
+	{
+		g_temp = componente_grafo(g_tele, i);
+		if(primeiro_tipo(g_temp)!=-1)
+		{
+			t1++;
+		}
+		else if(segundo_tipo(g_temp)!=-1)
+		{
+			t2++;
+		}
+		else if(terceiro_tipo(g_temp)!=-1)
+		{
+			t3++;
+		}
+		else if(quarto_tipo(g_temp)!=-1)
+		{
+			t4++;
+		}
+		
+		g_temp.v.clear(); // limpando a lista de vértices adjacências
+		g_temp.id_vertices.clear(); // limpando a lista de id de vértices
+	}
+	cout << t1 << " " << t2 << " " << t3 << " " << t4;
 }
 
 int main(){
@@ -295,7 +415,7 @@ int main(){
 	
 	int n, m;
 	grafo g, g_tele;
-	leitura_arquivo(&g, &g_tele, &n, &m, "entrada.txt");
+	leitura_arquivo(&g, &g_tele, &n, &m, "entrada2.txt");
 	cout << "Fez a leitura correta \n";
 	identifica_nave(g_tele);
 	
