@@ -6,24 +6,43 @@
 using namespace std;
 
 class vertices{
+	/*
+		Classe vertices:
+			Nessa classe são armazenados os vértices.
+	*/
 	public:
-	vector <vertices> adj; // essa variável vai guardar a lista de adjacência do vértice
-	int id; //identificador do vértice
-	int flag = 0; // vai representar a cor no dfs e no bfs
-	int tempo_d = -1;
-	int tempo_f = -1;
-	int componente = 0; // vai identificar as componentes
-	int cor = -1; // parâmetro para ajudar identificar se o grafo é bipartido
+		vector <vertices> adj; // essa variável vai guardar a lista de adjacência do vértice
+		int id; //identificador do vértice
+		int flag = 0; // vai representar a cor no dfs e no bfs
+		int tempo_d = -1; // dfs
+		int tempo_f = -1; // dfs
+		int componente = 0; // vai identificar as componentes
+		int cor = -1; // parâmetro para ajudar identificar se o grafo é bipartido
 };
 
 class grafo{
+	/*
+		Classe grafo:
+			Responsável por definir a estrutura da classe grafo, e de como o grafo
+			irá se comportar.
+
+	*/
 	public:
-	vector <vertices> v; // guarda a os vértices
-	vector <int> id_vertices; //guarda o id dos vértices
-	int num_componentes;
+		vector <vertices> v; // guarda a os vértices
+		vector <int> id_vertices; //guarda o id dos vértices
+		int num_componentes; // a quantidade de componentes presentes no grafo
 };
 
 int verifica_valor(grafo g, int valor){
+	/*
+		Método responsável por verificar se um vértice u, está presente
+		no grafo.
+
+		Parâmetros:
+			grafo g
+			int valor; é o id do valor que deve ser verificado se está na lista
+
+	*/
 
 	for(int i=0;i<g.id_vertices.size();i++){
 		if(valor == g.id_vertices[i]){
@@ -34,6 +53,15 @@ int verifica_valor(grafo g, int valor){
 }
 
 int verifica_lista_adjacencia(vector <vertices> v, int valor){
+	/*
+		Método responsável por verificar se um vértice u, está presente
+		na lista de adjacência do vértice v.
+
+		Parâmetros:
+			vector <vertices> v; lista do tipo vértices
+			int valor; é o id do valor que deve ser verificado se está na lista
+
+	*/
 
 	for(int i=0;i<v.size();i++){
 		if(valor == v[i].id){
@@ -44,6 +72,17 @@ int verifica_lista_adjacencia(vector <vertices> v, int valor){
 
 }
 grafo adiciona_vertice(grafo g, int *i, int valor){
+	/*
+		Método responsável verifica o vértice que ainda não está na 
+		lista de adjacência e adicionar o mesmo.
+		Também adiciona o valor na lista de id_vertices.
+
+		Parâmetros:
+
+			grafo g;
+			int i; index do valor a ser adicionado
+			int valor; o valor que será adicionado
+	*/
 	int index = *i;
 	g.id_vertices.push_back(valor); // adicionei na lista de vértices do grafo
 	g.v[index].id = valor; // dei um id ao valor
@@ -52,6 +91,18 @@ grafo adiciona_vertice(grafo g, int *i, int valor){
 	return g;
 }
 grafo leitura_vertices(grafo g, int *i, int valor, int ant_valor){
+	/*
+		Método responsável pela leitura dos vértices e montagem da lista de adjacência.
+		Como temos um grafo não direcionado, é necessário colocar adicionar o vértice v
+		na lista de adjacência de vértice u, e u na lista de adjacência de v. Sendo u e v
+		vértices presentes no grafo.
+
+		Parâmetros:
+			grafo g;
+			int i; a posição em que irá ser armazenado o valor
+			int valor; vértice u
+			int ant_valor; vértice v
+	*/
 
 	int index_valor = verifica_valor(g, valor);
 	int index_ant_valor = verifica_valor(g, ant_valor);
@@ -95,7 +146,18 @@ grafo leitura_vertices(grafo g, int *i, int valor, int ant_valor){
 }
 
 void leitura_arquivo(grafo *g_um, grafo *g_tele_um, int *n_vertices, int *m_tele, const char* nome_arquivo){
-	
+	/*
+		Método responsável pela leitura do arquivo e identificação e chamada das funções
+		para realização da montagem do grafo.
+
+		Parâmetros:
+			grafo g_um; é o grafo que possui as ligações dos postos de transferências
+			grafo g_tele_um; é o grafo que possui os teletransportes que devem ser realizados
+			pelos tripulantes da nave;
+			int n_vértices; é o número de postos de combate que será lido do arquivo
+			int m_tele; são os possível locais de teletranspote
+			const char nome_arquivo; é o nome do arquivo que possui o grafo
+	*/
 	ifstream file;
 	file.open(nome_arquivo);
 	int n = *n_vertices;
@@ -225,6 +287,14 @@ int dfs_bipartido(grafo *g_aux)
 }
 grafo dfs(grafo g){ // 0 false 1 true
 
+	/*
+		Método responsável por realizar fazer o método de busca em profundidade.
+		A implementação foi realizada com base no código do livro Algoritmos do Cormen.
+
+		Parâmetros:
+			grafo g;
+	*/
+
 	int tempo = 0;
 	int componentes = 0;
 	for(int i=0;i<g.v.size();i++){
@@ -239,6 +309,15 @@ grafo dfs(grafo g){ // 0 false 1 true
 }
 
 grafo componente_grafo(grafo g, int i){
+	/*
+		Método utilizado para identificação dos componentes do grafo, e retornar
+		subgrafos baseados em cada uma das componentes.
+
+		Parâmetros:
+			grafo g;
+			int i;  i é a componente a qual quero gerar o subgrafo
+	*/
+
 	grafo g_temp;
 	int index = 0;
 	for(int k=0;k<g.v.size();k++){
@@ -254,6 +333,17 @@ grafo componente_grafo(grafo g, int i){
 
 }
 int primeiro_tipo(grafo g){
+	/*
+		Método responsável por identificar naves do primeiro tipo.
+		Naves do primeiro tipo possuem como característica o fato de que a partir
+		de um vértice raíz é todos os outros vértices terão degree == 2, exceto o último.
+
+		Além disso, o valor de tempo fechamento do vértice raíz (calculado por meio do dfs),
+		é maior que todos os outros valores de fechamento presentes no cálculo.
+
+		Parâmetros:
+			grafo g;
+	*/
 	
 	int root = -1, tempo = 0, maior = 0;
 	for(int i = 0; i<g.v.size();i++){
@@ -275,18 +365,25 @@ int primeiro_tipo(grafo g){
 			return -1;
 		}
 	}
-	return 1;
+	return 0;
 }
 int quarto_tipo(grafo g)
 {
-	// no quarto tipo dos os vértices tem que ter degree igual
+	/*
+		Este método é responsável por identificar naves do quarto tipo.
+		Os grafos que caracterizam o quarto tipo são grafos cíclicos, onde
+		todos os vértices possuem o mesmo número de vizinhos.
+
+		Parâmetros:
+			grafo g; 
+	*/
 	int degree = g.v[0].adj.size();
 	for(int i = 1; i<g.v.size();i++){ 
 		if(g.v[i].adj.size()!=degree){
 			return -1;
 		}
 	}
-	return 1;
+	return 0;
 }
 int terceiro_tipo(grafo g)
 { 	/* 
@@ -379,6 +476,14 @@ int segundo_tipo(grafo g)
 	return -1;
 }
 void identifica_nave(grafo g_tele){
+	/*
+		Método responsável pela chamada dos métodos de cada uma das naves.
+		Esse método age sobre a quantidade de componentes existentes no grafo.
+		A quantidade de componentes é descoberta pelo métdo de busca em profundidade.
+
+		Parâmetros:
+			grafo g_tele;
+	*/
 
 	g_tele = dfs(g_tele); // calculo a busca em profundidade
 	int quant_naves = g_tele.num_componentes;
@@ -412,31 +517,9 @@ void identifica_nave(grafo g_tele){
 
 int main(){
 
-	
 	int n, m;
 	grafo g, g_tele;
 	leitura_arquivo(&g, &g_tele, &n, &m, "entrada2.txt");
-	cout << "Fez a leitura correta \n";
 	identifica_nave(g_tele);
-	
-	/*for(int i=0;i<g_tele.v.size();i++){
-		cout << g_tele.v[i].id << " ";
-		for(int j=0;j<g_tele.v[i].adj.size();j++){
-			cout << g_tele.v[i].adj[j].id << " ";
-		}
-		cout << "\n";
-	}
-	cout << "grafo 2 " << "\n";
-	for(int i=0;i<g.v.size();i++){
-		cout << g.v[i].id << " ";
-		for(int j=0;j<g.v[i].adj.size();j++){
-			cout << g.v[i].adj[j].id << " ";
-		}
-		cout << "\n";
-	}*/
-
-
-
-
 	return 0;
 }
