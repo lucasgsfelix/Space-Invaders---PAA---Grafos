@@ -215,6 +215,17 @@ void leitura_arquivo(grafo *g_um, grafo *g_tele_um, int *n_vertices, int *m_tele
 	file.close();
 }
 grafo dfs_visit(grafo g, int i, int *tempo){
+	/*
+		Está função é responsável por realizar a operação principal do método de DFS.
+		Está é uma função recursiva que irá analisar cada um dos vértices, assim como
+		seus vizinhos.
+
+		Parâmetros:
+			grafo g;
+			int i; que representa o index do vértice inicial (root)
+			int *tempo; que é um ponteiro para o tempo calculado para cada um dos
+			vértices por meio do dfs
+	*/
 	g.v[i].flag = 1; // cor cinza
 	*tempo = *tempo + 1;
 	g.v[i].tempo_d = *tempo;
