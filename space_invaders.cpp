@@ -332,6 +332,26 @@ grafo componente_grafo(grafo g, int i){
 	return g_temp;
 
 }
+void imprime_lista_adj(grafo g)
+{
+	/*
+
+		Responsável pela impressão do grafo.
+
+		Parâmetros:
+			grafo g;
+
+	*/
+	for(int i=0;i<g.v.size();i++)
+	{
+		cout << "ID: " << g.v[i].id << " ADJ :" "\n";
+		for(int j=0;j<g.v[i].adj.size();j++)
+		{
+			cout << g.v[i].adj[j].id << " ";
+		}
+		cout << "\n";
+	}
+}
 int primeiro_tipo(grafo g){
 	/*
 		Método responsável por identificar naves do primeiro tipo.
@@ -344,7 +364,6 @@ int primeiro_tipo(grafo g){
 		Parâmetros:
 			grafo g;
 	*/
-	
 	int root = -1, tempo = 0, maior = 0;
 	for(int i = 0; i<g.v.size();i++){
 		if(g.v[i].adj.size()>2){
@@ -422,19 +441,20 @@ int terceiro_tipo(grafo g)
 			{
 				index = verifica_valor(g, g.v[i].adj[j].id);
 				if(g.v[index].cor != g.v[i].cor)
-				{
+				{ // não pode ter a mesma cor que o vizinho
 					cont++;
 				}
 			}
 			if(g.v[i].cor == 0 && cont == quant_preto && cont == g.v[i].adj.size())
-			{ 
+			{ // o vértice branco tem que estar conectado a todos os pretos 
 				casos_certos++;
 			}
 			else if(g.v[i].cor == 1 && cont == quant_branco && cont == g.v[i].adj.size())
-			{
+			{ // o vértice preto tem que estar conectado a todos os brancos
 				casos_certos++;
 			}
 		}
+		cout << casos_certos << " " << g.id_vertices.size() << "\n";
 		if(casos_certos == g.id_vertices.size()){
 			return 0;
 		}
@@ -460,15 +480,12 @@ int segundo_tipo(grafo g)
 			grafo g_comp --> grafo de componente;
 	*/
 	int num_arestas = 0;
+
 	for(int i=0;i<g.v.size();i++)
 	{
-		for(int j=0;j<g.v[i].adj.size();i++)
-		{
-			num_arestas++;
-		}
+		num_arestas = g.v[i].adj.size() + num_arestas;
 	}
-	cout << g.v.size() << " " << (num_arestas) << "\n";
-	if(g.v.size() == (num_arestas)-1)
+	if(g.v.size() == (num_arestas/2)+1)
 	{
 		return 0;
 	}
@@ -507,6 +524,10 @@ void identifica_nave(grafo g_tele){
 		else if(quarto_tipo(g_temp)!=-1)
 		{
 			t4++;
+		}
+		else
+		{
+			cout << "Não entrou em nenhum tipo " << i+1 << "\n";
 		}
 		
 		g_temp.v.clear(); // limpando a lista de vértices adjacências
