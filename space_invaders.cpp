@@ -20,6 +20,7 @@ class vertices{
 		int cor = -1; // parâmetro para ajudar identificar se o grafo é bipartido
 		int distancia_pai = -1; // se for menos um, sei que o vértice não é atingível pelo root
 		int pai = -1; // id do pai do vértice
+		int index = 0; // index na lista de adjacência
 };
 
 class grafo{
@@ -88,6 +89,7 @@ grafo adiciona_vertice(grafo g, int *i, int valor){
 	int index = *i;
 	g.id_vertices.push_back(valor); // adicionei na lista de vértices do grafo
 	g.v[index].id = valor; // dei um id ao valor
+	g.v[index].index = g.id_vertices.size()-1;
 	*i = *i + 1;
 	
 	return g;
@@ -116,10 +118,13 @@ grafo leitura_vertices(grafo g, int *i, int valor, int ant_valor){
 			k = *i;
 			g.v[k-2].adj.push_back(g.v[k-1]); // estou adicionando o objeto do vértice vizinho
 			g.v[k-1].adj.push_back(g.v[k-2]); // adicionei para um e para o outro
+			g.v[k-2].index = k-2;
+			g.v[k-1].index = k-1;
 		}else{
 			g = adiciona_vertice(g, i, valor);
 			k = *i;
 			g.v[k-1].adj.push_back(g.v[k-1]); // estou adicionando o objeto do vértice vizinho
+			g.v[k-1].index = k-1;
 		}
 	}
 	else if(index_valor == -1)
@@ -341,6 +346,7 @@ grafo componente_grafo(grafo g, int i){
 			g_temp.v.push_back(g.v[k]);
 			g_temp.id_vertices.push_back(g.v[k].id);
 			g_temp.v[index].flag = 0;
+			g_temp.v[index].index = g.id_vertices.size()-1;
 			index++;
 		}
 	}
@@ -507,11 +513,6 @@ int segundo_tipo(grafo g)
 
 	return -1;
 }
-int calcula_tempo_vantagem(grafo g_temp, grafo g_dist){
-
-
-	return 0;
-}
 grafo bfs(grafo g, int root)
 {
 	/*
@@ -530,6 +531,8 @@ grafo bfs(grafo g, int root)
 	for(int i=0;i<g.v.size();i++)
 	{
 		g.v[i].cor = 0; // inicializando a cor do vértice
+		g.v[i].pai = -1;
+		g.v[i].distancia_pai = -1;
 	}
 
 	g.v[root].cor = 1; // inicializando a cor cinza do vértice
@@ -555,6 +558,29 @@ grafo bfs(grafo g, int root)
 	}
 	return g;
 }
+int calcula_tempo_vantagem(grafo g_temp, grafo g_dist){
+	/*
+		Função responsável por chamar o método de BFS para cada um par de vértice que 
+		possui root diferente, recalculando assim a distância para a raíz.
+
+		Parâmetros:
+			grafo g_temp; que é o grafo que possui as conexões da nave
+			grafo g_dist; que é o grafo que possui o root e o target pra calcular a distância
+
+	*/
+	vector <int> vertices = g_dist.id_vertices; // vertices que é preciso avaliar
+	int index = 0;
+	for(int i=0;i<vertices.size();i++)
+	{
+		index = verifica_valor(g.id_vertices, vertices[i]);
+		bfs(g_temp, g_dist.v[index]);
+		// a partir daqui terei que pensar melhor
+
+	}
+	
+
+	return 0;
+}
 grafo separa_grafo_por_id(vector <int> lista_id, grafo g_dist){
 	/*
 		Método responsável por gerar um grafo temporário com os vértices que postos
@@ -566,6 +592,7 @@ grafo separa_grafo_por_id(vector <int> lista_id, grafo g_dist){
 	*/
 	grafo g;
 	int flag = 0;
+
 	for(int i=0;i<g_dist.v.size();i++)
 	{
 		for(int j=0;j<lista_id.size();j++)
@@ -585,6 +612,7 @@ grafo separa_grafo_por_id(vector <int> lista_id, grafo g_dist){
 			}
 		}
 	}
+	
 	return g;
 }
 void identifica_nave(grafo g_tele, grafo g_dist){
@@ -627,6 +655,7 @@ void identifica_nave(grafo g_tele, grafo g_dist){
 		{
 			cout << "Não entrou em nenhum tipo " << i+1 << "\n";
 		}
+		
 		g_dist_temp = separa_grafo_por_id(g_temp.id_vertices, g_dist_temp);
 		calcula_tempo_vantagem(g_temp, g_dist_temp);
 		g_dist_temp.v.clear();
