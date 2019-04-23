@@ -18,6 +18,8 @@ class vertices{
 		int tempo_f = -1; // dfs
 		int componente = 0; // vai identificar as componentes
 		int cor = -1; // parâmetro para ajudar identificar se o grafo é bipartido
+		int distancia_pai = -1; // se for menos um, sei que o vértice não é atingível pelo root
+		int pai = -1; // id do pai do vértice
 };
 
 class grafo{
@@ -308,8 +310,10 @@ grafo dfs(grafo g){ // 0 false 1 true
 
 	int tempo = 0;
 	int componentes = 0;
-	for(int i=0;i<g.v.size();i++){
-		if (g.v[i].flag == 0 && g.v[i].id != 0){ // quer dizer que a cor é branca
+	for(int i=0;i<g.v.size();i++)
+	{
+		if (g.v[i].flag == 0 && g.v[i].id != 0)
+		{ // quer dizer que a cor é branca
 			componentes = componentes + 1;
 			g.v[i].componente = componentes;
 			g = dfs_visit(g, i, &tempo);
@@ -508,7 +512,50 @@ int calcula_tempo_vantagem(grafo g_temp, grafo g_dist){
 
 	return 0;
 }
-grafo separa_grafo_por_id(vector <vertices> lista_id, grafo g_dist){
+grafo bfs(grafo g, int root)
+{
+	/*
+		Método responsável por calcular a busca em largura no grafo.
+		A implementação deste código é baseada na implementação disponível
+		no livro de Algoritmos do Cormen.
+
+		Parâmetros:
+			grafo g; --> grafo que será calculado o bfs
+			int root; --> index do vértice inicial para o calculo do bfs
+	*/
+
+	vector <int> q; // fila de prioridades utilizada na implementação
+	int index = 0, u;
+
+	for(int i=0;i<g.v.size();i++)
+	{
+		g.v[i].cor = 0; // inicializando a cor do vértice
+	}
+
+	g.v[root].cor = 1; // inicializando a cor cinza do vértice
+	g.v[root].distancia_pai = 0; // a distância dele para ele mesmo
+	q.push_back(g.v[root].id); // estou adicionando o id do vértice na fila
+
+	while(q.empty()==false)
+	{
+		u = q[0]; // retirando da fila o primeiro elemento
+		q.erase(q.begin()); // retirando o elemento da fila
+		for(int i=0;i<g.v[u].adj.size();i++)
+		{
+			index = verifica_valor(g, g.v[u].adj[i].id);
+			if(g.v[index].cor==0) // se a cor do vértice for branco
+			{
+				g.v[index].cor = 1; // nova cor vai ser cinza
+				g.v[index].pai = g.v[u].id; // adicionando o id do par
+				g.v[index].distancia_pai = g.v[u].distancia_pai + 1;
+				q.push_back(g.v[index].id); // adicionando o vértice na lista
+			}
+		}
+		g.v[u].cor = 2; // a cor do vértice é preto e ele já foi processado
+	}
+	return g;
+}
+grafo separa_grafo_por_id(vector <int> lista_id, grafo g_dist){
 	/*
 		Método responsável por gerar um grafo temporário com os vértices que postos
 		utilizados para calcular os tempos de vantagem.
@@ -518,6 +565,7 @@ grafo separa_grafo_por_id(vector <vertices> lista_id, grafo g_dist){
 			grafo g_dist; o qual possui os locais dos postos
 	*/
 	grafo g;
+	int flag = 0;
 	for(int i=0;i<g_dist.v.size();i++)
 	{
 		for(int j=0;j<lista_id.size();j++)
@@ -526,12 +574,18 @@ grafo separa_grafo_por_id(vector <vertices> lista_id, grafo g_dist){
 			{
 				g.v.push_back(g_dist.v[i]);
 				g.id_vertices.push_back(g.v[i].id);
+				flag ++;
+			}
+			else
+			{
+				if(flag>0)
+				{
+					break;
+				}
 			}
 		}
 	}
-
-
-
+	return g;
 }
 void identifica_nave(grafo g_tele, grafo g_dist){
 	/*
@@ -573,7 +627,7 @@ void identifica_nave(grafo g_tele, grafo g_dist){
 		{
 			cout << "Não entrou em nenhum tipo " << i+1 << "\n";
 		}
-		g_dist_temp = separa_grafo_por_id(g_dist_temp.id_vertices);
+		g_dist_temp = separa_grafo_por_id(g_temp.id_vertices, g_dist_temp);
 		calcula_tempo_vantagem(g_temp, g_dist_temp);
 		g_dist_temp.v.clear();
 		g_dist_temp.id_vertices.clear();
