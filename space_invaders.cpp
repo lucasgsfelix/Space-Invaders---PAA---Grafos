@@ -503,20 +503,53 @@ int segundo_tipo(grafo g)
 
 	return -1;
 }
-void identifica_nave(grafo g_tele){
+int calcula_tempo_vantagem(grafo g_temp, grafo g_dist){
+
+
+	return 0;
+}
+grafo separa_grafo_por_id(vector <vertices> lista_id, grafo g_dist){
+	/*
+		Método responsável por gerar um grafo temporário com os vértices que postos
+		utilizados para calcular os tempos de vantagem.
+
+		Parametros:
+			vector lista_id; lista de ids do componente em que se deve separar os postos
+			grafo g_dist; o qual possui os locais dos postos
+	*/
+	grafo g;
+	for(int i=0;i<g_dist.v.size();i++)
+	{
+		for(int j=0;j<lista_id.size();j++)
+		{
+			if(lista_id[j] == g_dist.v[i].id)
+			{
+				g.v.push_back(g_dist.v[i]);
+				g.id_vertices.push_back(g.v[i].id);
+			}
+		}
+	}
+
+
+
+}
+void identifica_nave(grafo g_tele, grafo g_dist){
 	/*
 		Método responsável pela chamada dos métodos de cada uma das naves.
 		Esse método age sobre a quantidade de componentes existentes no grafo.
 		A quantidade de componentes é descoberta pelo métdo de busca em profundidade.
+		Além disso, esse método chama as funções para o cálculo do tempo de vantagem
+		de cada nave.
 
 		Parâmetros:
 			grafo g_tele;
+			grafo g_dist; --> sobre esse grafo é calculado o tempo de vantagem 
 	*/
 
 	g_tele = dfs(g_tele); // calculo a busca em profundidade
 	int quant_naves = g_tele.num_componentes;
 	int t1 = 0, t2 = 0, t3 = 0, t4 = 0;
-	grafo g_temp;
+	grafo g_temp, g_dist_temp;
 	for(int i=0;i<quant_naves;i++)
 	{
 		g_temp = componente_grafo(g_tele, i);
@@ -540,7 +573,10 @@ void identifica_nave(grafo g_tele){
 		{
 			cout << "Não entrou em nenhum tipo " << i+1 << "\n";
 		}
-		
+		g_dist_temp = separa_grafo_por_id(g_dist_temp.id_vertices);
+		calcula_tempo_vantagem(g_temp, g_dist_temp);
+		g_dist_temp.v.clear();
+		g_dist_temp.id_vertices.clear();
 		g_temp.v.clear(); // limpando a lista de vértices adjacências
 		g_temp.id_vertices.clear(); // limpando a lista de id de vértices
 	}
@@ -552,6 +588,6 @@ int main(){
 	int n, m;
 	grafo g, g_tele;
 	leitura_arquivo(&g, &g_tele, &n, &m, "entrada2.txt");
-	identifica_nave(g_tele);
+	identifica_nave(g_tele, g);
 	return 0;
 }
