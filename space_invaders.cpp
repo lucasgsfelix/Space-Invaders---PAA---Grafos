@@ -20,7 +20,6 @@ class vertices{
 		int cor = -1; // parâmetro para ajudar identificar se o grafo é bipartido
 		int distancia_pai = -1; // se for menos um, sei que o vértice não é atingível pelo root
 		int pai = -1; // id do pai do vértice
-		int index = 0; // index na lista de adjacência
 };
 
 class grafo{
@@ -35,7 +34,30 @@ class grafo{
 		vector <int> id_vertices; //guarda o id dos vértices
 		int num_componentes; // a quantidade de componentes presentes no grafo
 };
+void imprime_lista_adj(grafo g)
+{
+	/*
 
+		Responsável pela impressão do grafo.
+
+		Parâmetros:
+			grafo g;
+
+	*/
+	for(int i=0;i<g.v.size();i++)
+	{
+		cout << "ID: " << g.v[i].id << " ADJ :" "\n";
+		for(int j=0;j<g.v[i].adj.size();j++)
+		{
+			cout << g.v[i].adj[j].id << " ";
+		}
+		cout << "\n";
+	}
+	if(g.v.size()==0)
+	{
+		cout << "GRAFO VAZIO ! \n";
+	}
+}
 int verifica_valor(grafo g, int valor){
 	/*
 		Método responsável por verificar se um vértice u, está presente
@@ -46,8 +68,8 @@ int verifica_valor(grafo g, int valor){
 			int valor; é o id do valor que deve ser verificado se está na lista
 
 	*/
-
 	for(int i=0;i<g.id_vertices.size();i++){
+		//cout << g.id_vertices[i] << " " << valor << "\n";
 		if(valor == g.id_vertices[i]){
 			return i;
 		}
@@ -89,7 +111,6 @@ grafo adiciona_vertice(grafo g, int *i, int valor){
 	int index = *i;
 	g.id_vertices.push_back(valor); // adicionei na lista de vértices do grafo
 	g.v[index].id = valor; // dei um id ao valor
-	g.v[index].index = g.id_vertices.size()-1;
 	*i = *i + 1;
 	
 	return g;
@@ -118,13 +139,10 @@ grafo leitura_vertices(grafo g, int *i, int valor, int ant_valor){
 			k = *i;
 			g.v[k-2].adj.push_back(g.v[k-1]); // estou adicionando o objeto do vértice vizinho
 			g.v[k-1].adj.push_back(g.v[k-2]); // adicionei para um e para o outro
-			g.v[k-2].index = k-2;
-			g.v[k-1].index = k-1;
 		}else{
 			g = adiciona_vertice(g, i, valor);
 			k = *i;
 			g.v[k-1].adj.push_back(g.v[k-1]); // estou adicionando o objeto do vértice vizinho
-			g.v[k-1].index = k-1;
 		}
 	}
 	else if(index_valor == -1)
@@ -346,32 +364,11 @@ grafo componente_grafo(grafo g, int i){
 			g_temp.v.push_back(g.v[k]);
 			g_temp.id_vertices.push_back(g.v[k].id);
 			g_temp.v[index].flag = 0;
-			g_temp.v[index].index = g.id_vertices.size()-1;
 			index++;
 		}
 	}
 	return g_temp;
 
-}
-void imprime_lista_adj(grafo g)
-{
-	/*
-
-		Responsável pela impressão do grafo.
-
-		Parâmetros:
-			grafo g;
-
-	*/
-	for(int i=0;i<g.v.size();i++)
-	{
-		cout << "ID: " << g.v[i].id << " ADJ :" "\n";
-		for(int j=0;j<g.v[i].adj.size();j++)
-		{
-			cout << g.v[i].adj[j].id << " ";
-		}
-		cout << "\n";
-	}
 }
 int primeiro_tipo(grafo g){
 	/*
@@ -475,7 +472,6 @@ int terceiro_tipo(grafo g)
 				casos_certos++;
 			}
 		}
-		cout << casos_certos << " " << g.id_vertices.size() << "\n";
 		if(casos_certos == g.id_vertices.size()){
 			return 0;
 		}
@@ -537,9 +533,9 @@ grafo bfs(grafo g, int root)
 
 	g.v[root].cor = 1; // inicializando a cor cinza do vértice
 	g.v[root].distancia_pai = 0; // a distância dele para ele mesmo
-	q.push_back(g.v[root].id); // estou adicionando o id do vértice na fila
-
-	while(q.empty()==false)
+	q.push_back(root); // estou adicionando o id do vértice na fila
+	cout << "ROOT: " << g.v[root].id << "\n";
+	while(q.size()!=0)
 	{
 		u = q[0]; // retirando da fila o primeiro elemento
 		q.erase(q.begin()); // retirando o elemento da fila
@@ -551,7 +547,8 @@ grafo bfs(grafo g, int root)
 				g.v[index].cor = 1; // nova cor vai ser cinza
 				g.v[index].pai = g.v[u].id; // adicionando o id do par
 				g.v[index].distancia_pai = g.v[u].distancia_pai + 1;
-				q.push_back(g.v[index].id); // adicionando o vértice na lista
+				cout << "Distância: " << g.v[index].id <<" "<< g.v[u].distancia_pai + 1 <<"\n";
+				q.push_back(index); // adicionando o vértice na lista
 			}
 		}
 		g.v[u].cor = 2; // a cor do vértice é preto e ele já foi processado
@@ -569,17 +566,26 @@ int calcula_tempo_vantagem(grafo g_temp, grafo g_dist){
 
 	*/
 	vector <int> vertices = g_dist.id_vertices; // vertices que é preciso avaliar
-	int index = 0;
-	for(int i=0;i<vertices.size();i++)
+	int index = 0, index_aux = 0;
+	int tempo_vantagem = 0;
+	for(int i=0;i<g_temp.v.size();i++)
 	{
-		index = verifica_valor(g.id_vertices, vertices[i]);
-		bfs(g_temp, g_dist.v[index]);
-		// a partir daqui terei que pensar melhor
-
+		g_temp = bfs(g_temp, i); // para cada root
+		
+		index = verifica_valor(g_dist, g_temp.v[i].id);
+		/* 
+			quero descobrir qual o index na lista dist, 
+			do vértice g_temp.v[i].id, que de quem eu calculei a distância 
+		*/
+		for(int j=0;j<g_dist.v[index].adj.size();j++)
+		{	// tem um desses indexes errados
+			cout << g_dist.v[index].id << " " << g_dist.v[index].adj[j].id << " "<< " "<< g_temp.v[index_aux].id <<" " << g_temp.v[index_aux].distancia_pai << "\n";
+			index_aux = verifica_valor(g_dist, g_dist.v[index].adj[j].id);
+			tempo_vantagem = g_temp.v[index_aux].distancia_pai + tempo_vantagem;
+		}
 	}
-	
-
-	return 0;
+	cout << tempo_vantagem << "\n";
+	return tempo_vantagem/2;
 }
 grafo separa_grafo_por_id(vector <int> lista_id, grafo g_dist){
 	/*
@@ -592,7 +598,7 @@ grafo separa_grafo_por_id(vector <int> lista_id, grafo g_dist){
 	*/
 	grafo g;
 	int flag = 0;
-
+	g.id_vertices.clear();
 	for(int i=0;i<g_dist.v.size();i++)
 	{
 		for(int j=0;j<lista_id.size();j++)
@@ -600,19 +606,18 @@ grafo separa_grafo_por_id(vector <int> lista_id, grafo g_dist){
 			if(lista_id[j] == g_dist.v[i].id)
 			{
 				g.v.push_back(g_dist.v[i]);
-				g.id_vertices.push_back(g.v[i].id);
+				//cout << g.v[i].id << "\n";
+				g.id_vertices.push_back(lista_id[j]);
 				flag ++;
-			}
-			else
-			{
-				if(flag>0)
-				{
-					break;
-				}
 			}
 		}
 	}
-	
+	/*cout << "Teste FLAG-->" << flag << "\n";
+	for(int i=0;i<g.id_vertices.size();i++)
+	{
+		cout << g.id_vertices[i] << " ";
+	}
+	cout << "\n Teste \n";*/
 	return g;
 }
 void identifica_nave(grafo g_tele, grafo g_dist){
@@ -656,7 +661,7 @@ void identifica_nave(grafo g_tele, grafo g_dist){
 			cout << "Não entrou em nenhum tipo " << i+1 << "\n";
 		}
 		
-		g_dist_temp = separa_grafo_por_id(g_temp.id_vertices, g_dist_temp);
+		g_dist_temp = separa_grafo_por_id(g_temp.id_vertices, g_dist);
 		calcula_tempo_vantagem(g_temp, g_dist_temp);
 		g_dist_temp.v.clear();
 		g_dist_temp.id_vertices.clear();
@@ -670,7 +675,7 @@ int main(){
 
 	int n, m;
 	grafo g, g_tele;
-	leitura_arquivo(&g, &g_tele, &n, &m, "entrada2.txt");
+	leitura_arquivo(&g, &g_tele, &n, &m, "entrada.txt");
 	identifica_nave(g_tele, g);
 	return 0;
 }
