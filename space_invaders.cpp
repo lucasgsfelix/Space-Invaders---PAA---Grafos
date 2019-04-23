@@ -69,7 +69,6 @@ int verifica_valor(grafo g, int valor){
 
 	*/
 	for(int i=0;i<g.id_vertices.size();i++){
-		//cout << g.id_vertices[i] << " " << valor << "\n";
 		if(valor == g.id_vertices[i]){
 			return i;
 		}
@@ -534,7 +533,6 @@ grafo bfs(grafo g, int root)
 	g.v[root].cor = 1; // inicializando a cor cinza do vértice
 	g.v[root].distancia_pai = 0; // a distância dele para ele mesmo
 	q.push_back(root); // estou adicionando o id do vértice na fila
-	cout << "ROOT: " << g.v[root].id << "\n";
 	while(q.size()!=0)
 	{
 		u = q[0]; // retirando da fila o primeiro elemento
@@ -547,7 +545,6 @@ grafo bfs(grafo g, int root)
 				g.v[index].cor = 1; // nova cor vai ser cinza
 				g.v[index].pai = g.v[u].id; // adicionando o id do par
 				g.v[index].distancia_pai = g.v[u].distancia_pai + 1;
-				cout << "Distância: " << g.v[index].id <<" "<< g.v[u].distancia_pai + 1 <<"\n";
 				q.push_back(index); // adicionando o vértice na lista
 			}
 		}
@@ -566,8 +563,7 @@ int calcula_tempo_vantagem(grafo g_temp, grafo g_dist){
 
 	*/
 	vector <int> vertices = g_dist.id_vertices; // vertices que é preciso avaliar
-	int index = 0, index_aux = 0;
-	int tempo_vantagem = 0;
+	int index = 0, index_aux = 0, tempo_vantagem = 0, aux = 0, flag = 0;
 	for(int i=0;i<g_temp.v.size();i++)
 	{
 		g_temp = bfs(g_temp, i); // para cada root
@@ -577,14 +573,26 @@ int calcula_tempo_vantagem(grafo g_temp, grafo g_dist){
 			quero descobrir qual o index na lista dist, 
 			do vértice g_temp.v[i].id, que de quem eu calculei a distância 
 		*/
-		for(int j=0;j<g_dist.v[index].adj.size();j++)
+		aux = 0;
+		for(int j=0;j<g_temp.v[index].adj.size();j++)
 		{	// tem um desses indexes errados
-			cout << g_dist.v[index].id << " " << g_dist.v[index].adj[j].id << " "<< " "<< g_temp.v[index_aux].id <<" " << g_temp.v[index_aux].distancia_pai << "\n";
 			index_aux = verifica_valor(g_dist, g_dist.v[index].adj[j].id);
-			tempo_vantagem = g_temp.v[index_aux].distancia_pai + tempo_vantagem;
+			aux = g_temp.v[index_aux].distancia_pai + aux;
+			
+		}
+		if(flag==0)
+		{
+			tempo_vantagem = aux;
+			flag = 1;
+		}
+		else
+		{
+			if(tempo_vantagem>aux)
+			{ // eu quero o limite inferior não trivial
+				tempo_vantagem = aux;
+			}
 		}
 	}
-	cout << tempo_vantagem << "\n";
 	return tempo_vantagem/2;
 }
 grafo separa_grafo_por_id(vector <int> lista_id, grafo g_dist){
@@ -606,18 +614,11 @@ grafo separa_grafo_por_id(vector <int> lista_id, grafo g_dist){
 			if(lista_id[j] == g_dist.v[i].id)
 			{
 				g.v.push_back(g_dist.v[i]);
-				//cout << g.v[i].id << "\n";
 				g.id_vertices.push_back(lista_id[j]);
 				flag ++;
 			}
 		}
 	}
-	/*cout << "Teste FLAG-->" << flag << "\n";
-	for(int i=0;i<g.id_vertices.size();i++)
-	{
-		cout << g.id_vertices[i] << " ";
-	}
-	cout << "\n Teste \n";*/
 	return g;
 }
 void identifica_nave(grafo g_tele, grafo g_dist){
