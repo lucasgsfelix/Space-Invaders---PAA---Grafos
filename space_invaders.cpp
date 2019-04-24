@@ -562,8 +562,8 @@ int calcula_tempo_vantagem(grafo g_temp, grafo g_dist){
 			grafo g_dist; que é o grafo que possui o root e o target pra calcular a distância
 
 	*/
-	vector <int> vertices = g_dist.id_vertices; // vertices que é preciso avaliar
-	int index = 0, index_aux = 0, tempo_vantagem = 0, aux = 0, flag = 0;
+	vector <int> vertices; // vertices que é preciso avaliar
+	int index = 0, index_aux = 0, aux = 0, tempo_vantagem = 0, flag = 0;
 	for(int i=0;i<g_temp.v.size();i++)
 	{
 		g_temp = bfs(g_temp, i); // para cada root
@@ -573,26 +573,21 @@ int calcula_tempo_vantagem(grafo g_temp, grafo g_dist){
 			quero descobrir qual o index na lista dist, 
 			do vértice g_temp.v[i].id, que de quem eu calculei a distância 
 		*/
-		aux = 0;
-		for(int j=0;j<g_temp.v[index].adj.size();j++)
-		{	// tem um desses indexes errados
-			index_aux = verifica_valor(g_dist, g_dist.v[index].adj[j].id);
-			aux = g_temp.v[index_aux].distancia_pai + aux;
+		for(int j=0; j<g_dist.v[index].adj.size();j++)
+		{	// tá acessando posição de memória alocada mas não inicializada
+			if(j==g_dist.v[index].adj.size())
+			{
+				break;
+			}
+			index_aux = verifica_valor(g_temp, g_dist.v[index].adj[j].id);
+			cout << g_temp.v[i].id << " " << g_temp.v[index_aux].id << "\n";
+			tempo_vantagem = g_temp.v[index_aux].distancia_pai + tempo_vantagem;
+
 			
 		}
-		if(flag==0)
-		{
-			tempo_vantagem = aux;
-			flag = 1;
-		}
-		else
-		{
-			if(tempo_vantagem>aux)
-			{ // eu quero o limite inferior não trivial
-				tempo_vantagem = aux;
-			}
-		}
 	}
+	cout << tempo_vantagem << "\n";
+	exit(1);
 	return tempo_vantagem/2;
 }
 grafo separa_grafo_por_id(vector <int> lista_id, grafo g_dist){
