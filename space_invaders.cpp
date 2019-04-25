@@ -169,6 +169,45 @@ grafo leitura_vertices(grafo g, int *i, int valor, int ant_valor){
 	return g;
 }
 
+grafo leitura_vertices_grafo_tele(grafo g, int *i, int valor, int ant_valor)
+{
+	int index_valor = verifica_valor(g, valor);
+	int index_ant_valor = verifica_valor(g, ant_valor);
+	if(index_valor == -1 && index_ant_valor  == -1)
+	{ 
+		/*
+			Quer dizer que nenhum dos vértices foram adicionados.
+		*/
+		if(valor != ant_valor)
+		{
+			g = adiciona_vertice(g, i, ant_valor);
+			g = adiciona_vertice(g, i, valor);
+			g.v[*i-2].adj.push_back(g.v[*i-1]); // adicionei na lista de adj
+		}
+		else
+		{
+			g = adiciona_vertice(g, i, valor);
+			g.v[*i-1].adj.push_back(g.v[*i-1]);
+		}
+	}
+	else if(index_valor == -1)
+	{
+		g = adiciona_vertice(g, i, valor);
+		g.v[*i-1].adj.push_back(g.v[index_ant_valor]);
+
+	}
+	else if(index_ant_valor == -1)
+	{
+		g = adiciona_vertice(g, i, ant_valor);
+		g.v[*i-1].adj.push_back(g.v[index_valor]);
+	}
+	else
+	{
+		g.v[index_ant_valor].adj.push_back(g.v[index_valor]);
+	}
+	return g;
+
+}
 void leitura_arquivo(grafo *g_um, grafo *g_tele_um, int *n_vertices, int *m_tele, const char* nome_arquivo){
 	/*
 		Método responsável pela leitura do arquivo e identificação e chamada das funções
@@ -229,7 +268,7 @@ void leitura_arquivo(grafo *g_um, grafo *g_tele_um, int *n_vertices, int *m_tele
 				ant_valor = valor;
 			}	
 			else if(flag % 2 == 1){
-				g = leitura_vertices(g, &i, valor, ant_valor);
+				g = leitura_vertices_grafo_tele(g, &i, valor, ant_valor);
 				*g_um = g;
 			}
 		}
@@ -580,14 +619,12 @@ int calcula_tempo_vantagem(grafo g_temp, grafo g_dist){
 				break;
 			}
 			index_aux = verifica_valor(g_temp, g_dist.v[index].adj[j].id);
-			cout << g_temp.v[i].id << " " << g_temp.v[index_aux].id << "\n";
+			// source é vértice na posição i, target é o vértice na posição index
 			tempo_vantagem = g_temp.v[index_aux].distancia_pai + tempo_vantagem;
 
 			
 		}
 	}
-	cout << tempo_vantagem << "\n";
-	exit(1);
 	return tempo_vantagem/2;
 }
 grafo separa_grafo_por_id(vector <int> lista_id, grafo g_dist){
@@ -631,7 +668,7 @@ void identifica_nave(grafo g_tele, grafo g_dist){
 
 	g_tele = dfs(g_tele); // calculo a busca em profundidade
 	int quant_naves = g_tele.num_componentes;
-	int t1 = 0, t2 = 0, t3 = 0, t4 = 0;
+	int t1 = 0, t2 = 0, t3 = 0, t4 = 0, tempo_vantagem = 0, aux = 0;
 	grafo g_temp, g_dist_temp;
 	for(int i=0;i<quant_naves;i++)
 	{
@@ -658,13 +695,25 @@ void identifica_nave(grafo g_tele, grafo g_dist){
 		}
 		
 		g_dist_temp = separa_grafo_por_id(g_temp.id_vertices, g_dist);
-		calcula_tempo_vantagem(g_temp, g_dist_temp);
+		aux = calcula_tempo_vantagem(g_temp, g_dist_temp);
+		if(i==0)
+		{
+			tempo_vantagem = aux;
+		}
+		else
+		{
+			if(tempo_vantagem>aux)
+			{
+				tempo_vantagem = aux;
+			}
+		}
 		g_dist_temp.v.clear();
 		g_dist_temp.id_vertices.clear();
 		g_temp.v.clear(); // limpando a lista de vértices adjacências
 		g_temp.id_vertices.clear(); // limpando a lista de id de vértices
 	}
-	cout << t1 << " " << t2 << " " << t3 << " " << t4;
+	cout << t1 << " " << t2 << " " << t3 << " " << t4 << "\n";
+	cout << tempo_vantagem << "\n";
 }
 
 int main(){
