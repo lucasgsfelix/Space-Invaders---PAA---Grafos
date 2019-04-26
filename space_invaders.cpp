@@ -225,7 +225,7 @@ void leitura_arquivo(grafo *g_um, grafo *g_tele_um, int *n_vertices, int *m_tele
 	file.open(nome_arquivo);
 	int n = *n_vertices;
 	int m = *m_tele;
-	int valor, ant_valor, flag = 0, i = 0, j = 0;
+	int valor, ant_valor, flag = 0, i = 0, j = 0, aux = 0;
 	grafo g = *g_um;
 	grafo g_tele = *g_tele_um;
 
@@ -254,13 +254,15 @@ void leitura_arquivo(grafo *g_um, grafo *g_tele_um, int *n_vertices, int *m_tele
 			}
 
 		}
-		else if(m + 1 != g_tele.id_vertices.size()){
+		else if(m != aux){
 			if(flag % 2 == 0){
 				ant_valor = valor;
 			}
 			else if(flag % 2 == 1){
+				//cout << "OIOI " << valor << " " << ant_valor << "\n";
 				g_tele = leitura_vertices(g_tele, &j, valor, ant_valor);
 				*g_tele_um = g_tele;
+				aux ++;
 			}
 		}
 		else{
@@ -673,21 +675,28 @@ void identifica_nave(grafo g_tele, grafo g_dist){
 	for(int i=0;i<quant_naves;i++)
 	{
 		g_temp = componente_grafo(g_tele, i);
+		/*cout << "---------------\n";
+		imprime_lista_adj(g_temp);
+		cout << "---------------\n";*/
 		if(primeiro_tipo(g_temp)!=-1)
 		{
 			t1++;
+			//cout << "É tipo 1 \n";
 		}
 		else if(segundo_tipo(g_temp)!=-1)
 		{
 			t2++;
+			//cout << "É tipo 2 \n";
 		}
 		else if(terceiro_tipo(g_temp)!=-1)
 		{
 			t3++;
+			//cout << "É tipo 3 \n";
 		}
 		else if(quarto_tipo(g_temp)!=-1)
 		{
 			t4++;
+			//cout << "É tipo 4 \n";
 		}
 		else
 		{
@@ -720,7 +729,8 @@ int main(){
 
 	int n, m;
 	grafo g, g_tele;
-	leitura_arquivo(&g, &g_tele, &n, &m, "entrada.txt");
+	leitura_arquivo(&g, &g_tele, &n, &m, "1.in");
+	cout << "Aqui pelo menos ?" << "\n";
 	identifica_nave(g_tele, g);
 	return 0;
 }
