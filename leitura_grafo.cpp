@@ -69,9 +69,6 @@ int verifica_valor(grafo *g, int valor){
 			return i;
 		}
 		*pos++;
-		/*if(valor == g->id_vertices[i]){
-			return i;
-		}*/
 	}
 	return -1;
 }
@@ -215,5 +212,7 @@ int main()
 	int i=2;
 	grafo g = montagem_grafo_n_orientado(buffer, n, &i);
 	grafo g_orien = montagem_grafo_orientado(buffer, n, &i);
+	buffer.clear();
+	cout << (clock() - inicio)/CLOCKS_PER_SEC << "\n";
 
 }
