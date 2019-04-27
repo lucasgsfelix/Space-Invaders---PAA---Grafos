@@ -202,6 +202,41 @@ void imprime_lista_adj(grafo g)
 		cout << "GRAFO VAZIO ! \n";
 	}
 }
+grafo nao_orientado(vector <int> buffer, int m, int *i)
+{
+	grafo g;
+	g.v.resize(m);
+	int aux = 0;
+	for(int k=0;k<g.v.size();k++)
+	{
+		g.v[k].id = k+1; // em 0 está 1
+	}
+	while(aux<m)
+	{
+		g.v[buffer[*i]-1].adj.push_back(buffer[*i+1]);
+		g.v[buffer[*i+1]-1].adj.push_back(buffer[*i]);
+		*i=*i+2;
+		aux++;
+	}
+	*i=*i-2;
+	return g;
+
+}
+grafo orientado(vector <int> buffer, int n, int *i)
+{
+	grafo g;
+	g.v.resize(n);
+	for(int k=0;k<n;k++)
+	{
+		g.v[k].id = k+1;
+	}
+	while(*i<buffer.size())
+	{
+		g.v[buffer[*i]-1].adj.push_back(buffer[*i+1]);
+		*i=*i+2;
+	}
+	return g;
+}
 int main()
 {
 	int inicio = clock();
@@ -210,8 +245,9 @@ int main()
 	int n = buffer[0]; // n = de onde para onde deve ser feito o teleporte 
 	int m = buffer[1]; // m = quantidade de teleportes
 	int i=2;
-	grafo g = montagem_grafo_n_orientado(buffer, n, &i);
-	grafo g_orien = montagem_grafo_orientado(buffer, n, &i);
+	grafo g = nao_orientado(buffer, n, &i);
+	grafo g_orien = orientado(buffer, n, &i);
+	//grafo g_orien = montagem_grafo_orientado(buffer, n, &i);
 	buffer.clear();
 	cout << (clock() - inicio)/CLOCKS_PER_SEC << "\n";
 
