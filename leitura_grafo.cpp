@@ -83,14 +83,13 @@ grafo nao_orientado(vector <int> buffer, int m, int *i)
 	{
 		g.v[k].id = k+1; // em 0 está 1
 	}
-	while(aux<m)
+	while(aux<m-1)
 	{
 		g.v[buffer[*i]-1].adj.push_back(buffer[*i+1]);
 		g.v[buffer[*i+1]-1].adj.push_back(buffer[*i]);
 		*i=*i+2;
 		aux++;
 	}
-	*i=*i-2;
 	return g;
 
 }
@@ -109,7 +108,7 @@ grafo orientado(vector <int> buffer, int n, int *i)
 	}
 	return g;
 }
-grafo dfs_visit(grafo g, int i, int *tempo){
+grafo dfs_visit(grafo g, int i, int *tempo, int *quant_vertices){
 	/*
 		Está função é responsável por realizar a operação principal do método de DFS.
 		Está é uma função recursiva que irá analisar cada um dos vértices, assim como
@@ -127,9 +126,10 @@ grafo dfs_visit(grafo g, int i, int *tempo){
 	int index;
 	for(int k=0;k<g.v[i].adj.size();k++){
 		index = g.v[i].adj[k] - 1;
-		if(g.v[g.v[i].adj[k] - 1].flag == 0){ // cor branca
+		if(g.v[index].flag == 0){ // cor branca
 			g.v[index].componente = g.v[i].componente; // recebe o componente do pai
-			g = dfs_visit(g, index, tempo);
+			*quant_vertices = *quant_vertices + 1;
+			g = dfs_visit(g, index, tempo, quant_vertices);
 		}
 	}
 	g.v[i].flag = 2; // cor preto
@@ -147,31 +147,36 @@ grafo dfs(grafo g){ // 0 false 1 true
 			grafo g;
 	*/
 
-	int tempo = 0;
-	int componentes = 0;
+	int tempo = 0, componentes = 0, quant_vertices = 0;
 	for(int i=0;i<g.v.size();i++)
 	{
-		if (g.v[i].flag == 0) // quer dizer que a cor é branca
-		{ 
-			componentes++;
-			g.v[i].componente = componentes;
-			g = dfs_visit(g, i, &tempo);
+		quant_vertices = 1;
+		if (g.v[i].flag == 0 && g.v[i].adj.size()>0) // quer dizer que a cor é branca
+		{ 	
+			g.v[i].componente = componentes + 1;
+			g = dfs_visit(g, i, &tempo, &quant_vertices);
+			cout << quant_vertices << "\n";
+			if(quant_vertices >= 5)
+			{
+				componentes++;
+			}
 		}
 	}
+	cout << componentes << "\n";
 	g.num_componentes = componentes;
 	return g;
 }
 void identifica_naves(grafo g, grafo g_orien)
 {
 	g = dfs(g);
-	cout << g.num_componentes << "\n";
+	cout <<"Número de componentes "<< g.num_componentes << "\n";
 
 }
 int main()
 {
 	int inicio = clock();
 	vector <int> buffer;
-	leitura_arquivo("10.in", &buffer);
+	leitura_arquivo("1.in", &buffer);
 	int n = buffer[0]; // n = de onde para onde deve ser feito o teleporte 
 	int m = buffer[1]; // m = quantidade de teleportes
 	int i=2; // começa de 2 pois já foram avaliados os dois primeiros vértices
