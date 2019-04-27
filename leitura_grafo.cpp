@@ -13,7 +13,6 @@ class vertices{
 	*/
 	public:
 		vector <int> adj; // essa variável vai guardar a lista de adjacência do vértice
-		vector <int> adj_index; // vai adicionar o index na lista de vértices
 		int id; //identificador do vértice
 		int flag = 0; // vai representar a cor no dfs e no bfs
 		int tempo_d = -1; // dfs
@@ -22,7 +21,6 @@ class vertices{
 		int cor = -1; // parâmetro para ajudar identificar se o grafo é bipartido
 		int distancia_pai = -1; // se for menos um, sei que o vértice não é atingível pelo root
 		int pai = -1; // id do pai do vértice
-		int index = 0; // index do vértice
 };
 
 class grafo{
@@ -51,132 +49,6 @@ void leitura_arquivo(const char* nome_arquivo, vector <int> *buffer)
 		buffer->push_back(valor);
 	}
 	file.close();
-}
-int verifica_valor(grafo *g, int valor){
-	/*
-		Método responsável por verificar se um vértice u, está presente
-		no grafo.
-
-		Parâmetros:
-			grafo g
-			int valor; é o id do valor que deve ser verificado se está na lista
-
-	*/
-	int *pos = g->id_vertices.data();
-	for(int i=g->id_vertices.size();i>0;i--){
-		if(*pos == valor)
-		{
-			return i;
-		}
-		*pos++;
-	}
-	return -1;
-}
-void adiciona_vertice(grafo *g, int valor, int *k)
-{	
-	g->id_vertices.push_back(valor);
-	g->v[*k].id = valor;
-	*k=*k+1;
-
-}
-void adiciona_lista_adj(grafo *g, int valor, int index, int index_aux)
-{
-	/*
-		valor - quem eu vou adicionar na lista de adjacência
-		index - o index onde serão armazenados os valores
-		index_aux - index de quem eu vou adicionar
-	*/
-	g->v[index].adj.push_back(valor);
-	g->v[index].adj_index.push_back(index_aux);
-}
-grafo montagem_grafo_n_orientado(vector <int> buffer, int m, int *i)
-{
-	grafo g;
-	g.v.resize(m);
-	int index = 0, index_aux = 0, k=0, aux=0;
-	while(aux<m)
-	{
-		index = verifica_valor(&g, buffer[*i]);
-		index_aux = verifica_valor(&g, buffer[*i+1]);
-		if(index == -1 && index_aux==-1)
-		{ // caso nenhum dos dois vértices tenham sido alocados
-			adiciona_vertice(&g, buffer[*i], &k);
-			if(buffer[*i] != buffer[*i+1])
-			{
-				adiciona_vertice(&g, buffer[*i+1], &k);
-				adiciona_lista_adj(&g, buffer[*i], k-2, k-1);
-				adiciona_lista_adj(&g, buffer[*i+1], k-1, k-2);
-				aux=aux+2;
-			}
-			else
-			{
-				adiciona_lista_adj(&g, buffer[*i], k-1, k-1);
-				aux++;
-			}
-		}
-		else if(index == -1)
-		{ // caso apenas um não tenha sido alocado
-			adiciona_vertice(&g, buffer[*i], &k);
-			adiciona_lista_adj(&g, buffer[*i+1], k-1, index_aux);
-			adiciona_lista_adj(&g, buffer[*i], index_aux, k-1);
-			aux++;
-		}
-		else if(index_aux == -1)
-		{ // caso apenas um não tenha sido alocado
-			adiciona_vertice(&g, buffer[*i+1], &k);
-			adiciona_lista_adj(&g, buffer[*i+1], index, k-1);
-			adiciona_lista_adj(&g, buffer[*i], k-1, index);
-			aux++;
-		}
-		else
-		{ // caso os dois tenham sido alocados
-			adiciona_lista_adj(&g, buffer[*i], index_aux, index);
-			adiciona_lista_adj(&g, buffer[*i+1], index, index_aux);
-		}
-		*i=*i+2;
-	}
-	return g;
-}
-grafo montagem_grafo_orientado(vector <int> buffer, int n, int *i)
-{
-	grafo g;
-	g.v.resize(n);
-	int cont = *i, index = 0, index_aux = 0, k=0;
-	while(*i<buffer.size())
-	{
-		index = verifica_valor(&g, buffer[*i]);
-		index_aux = verifica_valor(&g, buffer[*i+1]);
-		if (index == -1 && index_aux == -1)
-		{
-			adiciona_vertice(&g, buffer[*i], &k);
-			if(buffer[*i] != buffer[*i+1])
-			{
-				adiciona_vertice(&g, buffer[*i+1], &k);
-				adiciona_lista_adj(&g, buffer[*i+1], k-2, k-1);
-			}
-			else
-			{
-				adiciona_lista_adj(&g, buffer[*i+1], k-1, k-1);
-			}
-		}
-		else if(index == -1)
-		{
-			adiciona_vertice(&g, buffer[*i], &k);
-			adiciona_lista_adj(&g, buffer[*i+1], k-1, index_aux);
-		}
-		else if(index_aux == -1)
-		{
-			adiciona_vertice(&g, buffer[*i+1], &k);
-			adiciona_lista_adj(&g, buffer[*i+1], index, k-1);
-		}
-		else
-		{
-			adiciona_lista_adj(&g, buffer[*i+1], index, index_aux);
-		}
-		cont=cont+2;
-		*i = *i+2;
-	}
-	return g;
 }
 void imprime_lista_adj(grafo g)
 {
@@ -237,6 +109,64 @@ grafo orientado(vector <int> buffer, int n, int *i)
 	}
 	return g;
 }
+grafo dfs_visit(grafo g, int i, int *tempo){
+	/*
+		Está função é responsável por realizar a operação principal do método de DFS.
+		Está é uma função recursiva que irá analisar cada um dos vértices, assim como
+		seus vizinhos.
+
+		Parâmetros:
+			grafo g;
+			int i; que representa o index do vértice inicial (root)
+			int *tempo; que é um ponteiro para o tempo calculado para cada um dos
+			vértices por meio do dfs
+	*/
+	g.v[i].flag = 1; // cor cinza
+	*tempo = *tempo + 1;
+	g.v[i].tempo_d = *tempo;
+	int index;
+	for(int k=0;k<g.v[i].adj.size();k++){
+		index = g.v[i].adj[k] - 1;
+		if(g.v[g.v[i].adj[k] - 1].flag == 0){ // cor branca
+			g.v[index].componente = g.v[i].componente; // recebe o componente do pai
+			g = dfs_visit(g, index, tempo);
+		}
+	}
+	g.v[i].flag = 2; // cor preto
+	*tempo = *tempo + 1;
+	g.v[i].tempo_f = *tempo;
+	return g;
+}
+grafo dfs(grafo g){ // 0 false 1 true
+
+	/*
+		Método responsável por realizar fazer o método de busca em profundidade.
+		A implementação foi realizada com base no código do livro Algoritmos do Cormen.
+
+		Parâmetros:
+			grafo g;
+	*/
+
+	int tempo = 0;
+	int componentes = 0;
+	for(int i=0;i<g.v.size();i++)
+	{
+		if (g.v[i].flag == 0) // quer dizer que a cor é branca
+		{ 
+			componentes++;
+			g.v[i].componente = componentes;
+			g = dfs_visit(g, i, &tempo);
+		}
+	}
+	g.num_componentes = componentes;
+	return g;
+}
+void identifica_naves(grafo g, grafo g_orien)
+{
+	g = dfs(g);
+	cout << g.num_componentes << "\n";
+
+}
 int main()
 {
 	int inicio = clock();
@@ -244,11 +174,13 @@ int main()
 	leitura_arquivo("10.in", &buffer);
 	int n = buffer[0]; // n = de onde para onde deve ser feito o teleporte 
 	int m = buffer[1]; // m = quantidade de teleportes
-	int i=2;
+	int i=2; // começa de 2 pois já foram avaliados os dois primeiros vértices
 	grafo g = nao_orientado(buffer, n, &i);
 	grafo g_orien = orientado(buffer, n, &i);
-	//grafo g_orien = montagem_grafo_orientado(buffer, n, &i);
 	buffer.clear();
+	cout << (clock() - inicio)/CLOCKS_PER_SEC << "\n";
+	identifica_naves(g, g_orien);
+
 	cout << (clock() - inicio)/CLOCKS_PER_SEC << "\n";
 
 }
