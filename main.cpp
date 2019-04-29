@@ -33,6 +33,7 @@ class grafo{
 		vector <vertices> v; // guarda a os vértices
 		vector <int> id_vertices; //guarda o id dos vértices
 		int num_componentes; // a quantidade de componentes presentes no grafo
+		vector <int> vertices_visitados;
 };
 class componente{
 	public:
@@ -269,6 +270,42 @@ int dfs_bipartido(grafo *g, int root, int cor, int *quant_zeros, int *quant_um, 
 	}
 	return 0;
 }
+void bfs(grafo *g, int root)
+{
+	/*
+		Método responsável por calcular a busca em largura no grafo.
+		A implementação deste código é baseada na implementação disponível
+		no livro de Algoritmos do Cormen.
+
+		Parâmetros:
+			grafo g; --> grafo que será calculado o bfs
+			int root; --> index do vértice inicial para o calculo do bfs
+	*/
+	vector <int> q; // fila de prioridades utilizada na implementação
+	int index = 0, u;
+	g->v[root].cor = 1; // inicializando a cor cinza do vértice
+	g->v[root].distancia_pai = 0; // a distância dele para ele mesmo
+	q.push_back(root); // estou adicionando o id do vértice na fila
+	g->vertices_visitados.push_back(root);
+	while(q.size()!=0)
+	{
+		u = q[0]; // retirando da fila o primeiro elemento
+		q.erase(q.begin()); // retirando o elemento da fila
+		for(int i=0;i<g->v[u].adj.size();i++)
+		{
+			index = g->v[u].adj[i] - 1;
+			if(g->v[index].cor==0) // se a cor do vértice for branco
+			{
+				g->vertices_visitados.push_back(index);
+				g->v[index].cor = 1; // nova cor vai ser cinza
+				g->v[index].pai = g->v[u].id; // adicionando o id do par
+				g->v[index].distancia_pai = g->v[u].distancia_pai + 1;
+				q.push_back(index); // adicionando o vértice na lista
+			}
+		}
+		g->v[u].cor = 2; // a cor do vértice é preto e ele já foi processado
+	}
+}
 int terceiro_tipo(grafo *g, componente *c)
 {
 	int quant_zeros = 0, quant_um = 0, grau_medio = 0;
@@ -282,14 +319,13 @@ int terceiro_tipo(grafo *g, componente *c)
 	}
 	return -1;
 }
-void identifica_naves(grafo *g, grafo *g_orien)
+void identifica_naves(grafo *g)
 {
 	vector <componente> comp_list = dfs(g);
 	int k = 0, tempo = 0, quant_vertices;
 	int t1=0, t2=0, t3=0, t4=0;
 	for(int i=0;i<comp_list.size();i++)
 	{
-		//k = acha_vertice_componente(g, i+1, k);
 		if(primeiro_tipo(&comp_list[i]) != -1)
 		{
 			t1++;
@@ -306,12 +342,38 @@ void identifica_naves(grafo *g, grafo *g_orien)
 		{
 			t4++;
 		}
-		
 	}
 	cout << "Tipos 1: "<< t1 << "\n";
 	cout << "Tipos 2: " << t2 << "\n";
 	cout << "Tipos 3: " << t3 << "\n";
 	cout << "Tipos 4: " << t4 << "\n";
+
+}
+void calcula_tempo_vantagem(grafo *g, grafo *g_orien)
+{
+	int tempo_vantagem = 0;
+	for(int i=0;i<g->v.size();i++)
+	{
+		g->v[i].cor = 0;
+	}
+	for(int i=0;i<g->v.size();i++)
+	{ // tenho que verificar para todos os vértices
+		bfs(g, i);
+		tempo_vantagem = 0;
+		for(int k=0;k<g->vertices_visitados.size();k++)
+		{
+			g->v[g->vertices_visitados[k]].cor = 0;
+			g->v[g->vertices_visitados[k]].distancia_pai = -1;
+			g->v[g->vertices_visitados[k]].pai = -1;
+		}
+		g->vertices_visitados.clear();
+
+		/*for(int k=0;k<g_orien->v[i].adj.size();k++)
+		{
+			tempo_vantagem = g_orien->
+		}*/
+
+	}
 
 }
 int main()
@@ -325,7 +387,8 @@ int main()
 	grafo g = nao_orientado(buffer, n, m, &i);
 	grafo g_orien = orientado(buffer, n, &i);
 	buffer.clear();
-	identifica_naves(&g, &g_orien);
+	identifica_naves(&g);
+	calcula_tempo_vantagem(&g, &g_orien);
 
 	cout << (clock() - inicio)/CLOCKS_PER_SEC << "\n";
 
