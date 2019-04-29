@@ -42,6 +42,8 @@ class componente{
 		int quant_um = 0;
 		int quant_vertices = 0;
 		int quant_arestas = 0;
+		int root = 0;
+		int grau_medio = 0;
 };
 void leitura_arquivo(const char* nome_arquivo, vector <int> *buffer)
 {
@@ -96,7 +98,6 @@ grafo nao_orientado(vector <int> buffer, int n, int m, int *i)
 		g.v[buffer[*i]-1].adj.push_back(buffer[*i+1]);
 		if(buffer[*i] != buffer[*i+1])
 		{
-			
 			g.v[buffer[*i+1]-1].adj.push_back(buffer[*i]);
 		}
 		*i=*i+2;
@@ -147,6 +148,7 @@ void dfs_visit(grafo *g, int i, int *tempo, componente *c){
 		}
 		c->quant_arestas = c->quant_arestas + 1;
 	}
+
 	if(g->v[i].adj.size() <= c->min_degree)
 	{
 		c->min_degree = g->v[i].adj.size();
@@ -173,7 +175,7 @@ vector <componente> dfs(grafo *g){ // 0 false 1 true
 		Parâmetros:
 			grafo g;
 	*/
-	int tempo = 0, componentes = 0, tempo_ant;
+	int tempo = 0;
 	vector <componente> comp_list;
 	componente c;
 	for(int i=0;i<g->v.size();i++)
@@ -183,24 +185,14 @@ vector <componente> dfs(grafo *g){ // 0 false 1 true
 		c.min_degree = g->v[i].adj.size();
 		if (g->v[i].flag == 0) // quer dizer que a cor é branca
 		{ 	
-			g->v[i].componente = componentes + 1;
+			g->v[i].componente = g->v[i].componente + 1;
 			dfs_visit(g, i, &tempo, &c);
-			if(c.quant_vertices >= 5)
-			{
-				componentes++;
-				c.componente = componentes; // id do componente
-				comp_list.push_back(c);
-			}
-			else
-			{ // vai visitar no máximo 4 vértices por iteração
-				g->v[i].componente = -1;
-				tempo_ant = tempo;
-				dfs_visit(g, i, &tempo, &c);
-				tempo = tempo_ant;
-			}
+			c.componente = g->v[i].componente; // id do componente
+			c.root = i; // o root daquele componente, passando o index
+			comp_list.push_back(c);
 		}
 	}
-	g->num_componentes = componentes;
+	g->num_componentes = comp_list.size();
 	return comp_list;
 }
 int primeiro_tipo(componente *c)
@@ -211,18 +203,91 @@ int primeiro_tipo(componente *c)
 	}
 	return -1;
 }
+int segundo_tipo(componente *c)
+{
+	if(c->quant_vertices == (c->quant_arestas/2)+1)
+	{
+		return 0;
+	}
+	return -1;
+}
+int quarto_tipo(componente *c)
+{	
+	if (c->quant_arestas == c->quant_vertices*2)
+	{
+		return 0;
+	}
+	if (c->max_degree == c-> min_degree && c->max_degree == 2)
+	{
+		return 0;
+	}
+	return -1;
+}
+int dfs_bipartido(grafo *g, int root, int cor, int *quant_zeros, int *quant_um, int *grau_medio)
+{
+	/*
+		Está função é responsável por identificar se um grafo é bipartido ou não.
+		Para isso, ela associa cores aos vértices. 
+		Caso ela consiga colocar vizinhos sempre com cores diferentes (0 ou 1),
+		então o grafo é bipartido.
+
+		Essa função é utilizada no terceiro método. Por meio das cores é possível
+		definir se o vértice é bipartido e se ele satisfaz as requisições do quarto
+		método.
+
+		Esse algoritmo é uma variação do DFS.
+
+		Parâmetros:
+			grafo g;
+			int root; que deve ser o index do vértice da componente
+	*/
+	int index, bipartido;
+	g->v[root].cor = cor; // o primeiro vértice vai ter cor 0
+	if(cor == 0)
+	{
+		*quant_zeros = *quant_zeros + 1;
+	}
+	else
+	{
+		*quant_um = *quant_um + 1;
+		*grau_medio = *grau_medio + g->v[root].adj.size();
+	}	
+	for(int i = 0; i<g->v[root].adj.size();i++)
+	{
+		index = g->v[root].adj[i] - 1;
+		if(g->v[index].cor == -1) // não foi visitado ainda
+		{
+			bipartido = dfs_bipartido(g, index, 1-cor, quant_zeros, quant_um, grau_medio);
+		}
+		else
+		{
+			if(g->v[root].cor == g->v[index].cor)
+			{
+				return -1;
+			}
+		}
+	}
+	return 0;
+}
+int terceiro_tipo(grafo *g, componente *c)
+{
+	int quant_zeros = 0, quant_um = 0, grau_medio = 0;
+	int bipartido = dfs_bipartido(g, c->root, 0, &quant_zeros, &quant_um, &grau_medio);
+	if(bipartido == 0)
+	{
+		if(grau_medio/quant_zeros == quant_um)
+		{
+			return 0;
+		}
+	}
+	return -1;
+}
 void identifica_naves(grafo *g)
 {
 	vector <componente> comp_list = dfs(g);
 	int k = 0, tempo = 0, quant_vertices;
-	int t1=0;
-	for(int i=0;i<g->v.size();i++)
-	{
-		g->v[i].flag = 0;
-		g->v[i].tempo_d = 0;
-		g->v[i].tempo_f = 0;
-	}
-	cout << "Quant. componentes " << comp_list.size() << "\n";
+	int t1=0, t2=0, t3=0, t4=0;
+	cout << "Quantidade de componentes " << comp_list.size() << "\n";
 	for(int i=0;i<comp_list.size();i++)
 	{
 		//k = acha_vertice_componente(g, i+1, k);
@@ -230,19 +295,31 @@ void identifica_naves(grafo *g)
 		{
 			t1++;
 		}
-		else if(segundo_tipo(&comp_list[i] != -1))
+		else if(segundo_tipo(&comp_list[i]) != -1)
 		{
-			
+			t2++;
 		}
+		else if(terceiro_tipo(g, &comp_list[i]) != -1)
+		{
+			t3++;
+		}
+		else if(quarto_tipo(&comp_list[i]) != -1)
+		{
+			t4++;
+		}
+		
 	}
 	cout << "Tipos 1: "<< t1 << "\n";
+	cout << "Tipos 2: " << t2 << "\n";
+	cout << "Tipos 3: " << t3 << "\n";
+	cout << "Tipos 4: " << t4 << "\n";
 
 }
 int main()
 {
 	int inicio = clock();
 	vector <int> buffer;
-	leitura_arquivo("entrada.txt", &buffer);
+	leitura_arquivo("9.in", &buffer);
 	int n = buffer[0]; // n = de onde para onde deve ser feito o teleporte 
 	int m = buffer[1]; // m = quantidade de teleportes
 	int i=2; // começa de 2 pois já foram avaliados os dois primeiros vértices
