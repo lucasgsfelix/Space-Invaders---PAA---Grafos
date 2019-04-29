@@ -282,12 +282,11 @@ int terceiro_tipo(grafo *g, componente *c)
 	}
 	return -1;
 }
-void identifica_naves(grafo *g)
+void identifica_naves(grafo *g, grafo *g_orien)
 {
 	vector <componente> comp_list = dfs(g);
 	int k = 0, tempo = 0, quant_vertices;
 	int t1=0, t2=0, t3=0, t4=0;
-	cout << "Quantidade de componentes " << comp_list.size() << "\n";
 	for(int i=0;i<comp_list.size();i++)
 	{
 		//k = acha_vertice_componente(g, i+1, k);
@@ -326,7 +325,7 @@ int main()
 	grafo g = nao_orientado(buffer, n, m, &i);
 	grafo g_orien = orientado(buffer, n, &i);
 	buffer.clear();
-	identifica_naves(&g);
+	identifica_naves(&g, &g_orien);
 
 	cout << (clock() - inicio)/CLOCKS_PER_SEC << "\n";
 
