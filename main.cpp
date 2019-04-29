@@ -34,7 +34,15 @@ class grafo{
 		vector <int> id_vertices; //guarda o id dos vértices
 		int num_componentes; // a quantidade de componentes presentes no grafo
 };
-
+class componente{
+	public:
+		int componente = 0;
+		int min_degree = 0;
+		int max_degree = 0;
+		int quant_um = 0;
+		int quant_vertices = 0;
+		int quant_arestas = 0;
+};
 void leitura_arquivo(const char* nome_arquivo, vector <int> *buffer)
 {
 	ifstream file;
@@ -112,7 +120,7 @@ grafo orientado(vector <int> buffer, int n, int *i)
 	}
 	return g;
 }
-void dfs_visit(grafo *g, int i, int *tempo, int *quant_vertices){
+void dfs_visit(grafo *g, int i, int *tempo, componente *c){
 	/*
 		Está função é responsável por realizar a operação principal do método de DFS.
 		Está é uma função recursiva que irá analisar cada um dos vértices, assim como
@@ -124,6 +132,11 @@ void dfs_visit(grafo *g, int i, int *tempo, int *quant_vertices){
 			int *tempo; que é um ponteiro para o tempo calculado para cada um dos
 			vértices por meio do dfs
 	*/
+	if(*tempo == 0)
+	{
+		c->max_degree = g->v[i].adj.size();
+		c->min_degree = g->v[i].adj.size();
+	}
 	g->v[i].flag = 1; // cor cinza
 	*tempo = *tempo + 1;
 	g->v[i].tempo_d = *tempo;
@@ -132,17 +145,31 @@ void dfs_visit(grafo *g, int i, int *tempo, int *quant_vertices){
 	{
 		index = g->v[i].adj[k] - 1;
 		if(g->v[index].flag == 0)
-		{ // cor branca
+		{
 			g->v[index].componente = g->v[i].componente; // recebe o componente do pai
-			*quant_vertices = *quant_vertices + 1;
-			dfs_visit(g, index, tempo, quant_vertices);
+			c->quant_vertices = c->quant_vertices + 1;
+			dfs_visit(g, index, tempo, c);
+		}
+		c->quant_arestas = c->quant_arestas + 1;
+	}
+	if(g->v[i].adj.size() <= c->min_degree)
+	{
+		c->min_degree = g->v[i].adj.size();
+		if(c->min_degree == 1)
+		{
+			c->quant_um = c->quant_um + 1;
 		}
 	}
+	if(g->v[i].adj.size()>c->max_degree)
+	{
+		c->max_degree = g->v[i].adj.size();
+	}
+
 	g->v[i].flag = 2; // cor preto
 	*tempo = *tempo + 1;
 	g->v[i].tempo_f = *tempo;
 }
-void dfs(grafo *g){ // 0 false 1 true
+vector <componente> dfs(grafo *g){ // 0 false 1 true
 
 	/*
 		Método responsável por realizar fazer o método de busca em profundidade.
@@ -151,27 +178,77 @@ void dfs(grafo *g){ // 0 false 1 true
 		Parâmetros:
 			grafo g;
 	*/
-	int tempo = 0, componentes = 0, quant_vertices = 0;
+	int tempo = 0, componentes = 0;
+	vector <componente> comp_list;
+	componente c;
 	for(int i=0;i<g->v.size();i++)
 	{
-		quant_vertices = 1;
+		c.quant_um = 0;
+		c.max_degree = 1;
+		c.min_degree = 1;
+		c.componente = 0;
+		c.quant_vertices = 1;
+		c.quant_arestas = 0;
 		if (g->v[i].adj.size()>0 && g->v[i].flag == 0) // quer dizer que a cor é branca
 		{ 	
 			g->v[i].componente = componentes + 1;
-			dfs_visit(g, i, &tempo, &quant_vertices);
-			cout << quant_vertices << "\n";
-			if(quant_vertices >= 5)
+			dfs_visit(g, i, &tempo, &c);
+			if(c.quant_vertices >= 5)
 			{
 				componentes++;
+				c.componente = componentes; // id do componente
+				comp_list.push_back(c);
+			}
+			else
+			{ // vai visitar no máximo 4 vértices por iteração
+				g->v[i].componente = -1;
+				dfs_visit(g, i, &tempo, &c);
 			}
 		}
 	}
 	g->num_componentes = componentes;
+	return comp_list;
+}
+int acha_vertice_componente(grafo *g, int componente, int k)
+{
+
+	for(int i=k;i<g->v.size();i++)
+	{
+		if(g->v[i].componente == componente)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+int primeiro_tipo(componente *c)
+{
+	if(c->min_degree == 1 && c->max_degree == 2 && c->quant_um == 2 && c->quant_vertices == (c->quant_arestas/2)+1)
+	{
+		return 0;
+	}
+	return -1;
 }
 void identifica_naves(grafo *g)
 {
-	dfs(g);
-	cout <<"Número de componentes "<< g->num_componentes << "\n";
+	vector <componente> comp_list = dfs(g);
+	int k = 0, tempo = 0, quant_vertices;
+	int t1=0;
+	for(int i=0;i<g->v.size();i++)
+	{
+		g->v[i].flag = 0;
+		g->v[i].tempo_d = 0;
+		g->v[i].tempo_f = 0;
+	}
+	for(int i=0;i<comp_list.size();i++)
+	{
+		//k = acha_vertice_componente(g, i+1, k);
+		if(primeiro_tipo(&comp_list[i]) != -1)
+		{
+			t1++;
+		}
+	}
+	cout << "Tipos 1: "<< t1 << "\n";
 
 }
 int main()
