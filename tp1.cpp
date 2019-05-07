@@ -117,7 +117,15 @@ grafo orientado(vector <int> buffer, int n, int *i)
 	}
 	while(*i<buffer.size())
 	{
-		g.v[buffer[*i]-1].adj.push_back(buffer[*i+1]);
+		if(g.v[buffer[*i]-1].adj.size() >= g.v[buffer[*i+1]-1].adj.size())
+		{
+			g.v[buffer[*i]-1].adj.push_back(buffer[*i+1]);
+		}
+		else
+		{
+			g.v[buffer[*i+1]-1].adj.push_back(buffer[*i]);
+		}
+		
 		*i=*i+2;
 	}
 	return g;
@@ -346,14 +354,16 @@ void identifica_naves(grafo *g, int *t1, int *t2, int *t3, int *t4)
 }
 int calcula_tempo_vantagem(grafo *g, grafo *g_orien)
 {
-	int tempo_vantagem = 0;
+	int tempo_vantagem = 0, flat = 0;
 	for(int i=0;i<g->v.size();i++)
 	{
 		g->v[i].cor = 0;
 	}
+	vector <int> vertices_visitados;
+	int aux = 0, min = 0, flag_iteracao = 0, flag_entrada = 0, cont = 0;
 	for(int i=0;i<g->v.size();i++)
 	{ // tenho que verificar para todos os vértices
-		
+
 		for(int k=0;k<g->vertices_visitados.size();k++)
 		{
 			g->v[g->vertices_visitados[k]].cor = 0;
@@ -361,15 +371,62 @@ int calcula_tempo_vantagem(grafo *g, grafo *g_orien)
 			g->v[g->vertices_visitados[k]].pai = -1;
 		}
 		g->vertices_visitados.clear();
-		bfs(g, i);
 		tempo_vantagem = 0;
-		for(int k=0;k<g_orien->v[i].adj.size();k++)
-		//for(int k=0;k<g->vertices_visitados.size();k++)
-		{ // a lista de adjacência está por id
-			tempo_vantagem = g->v[g_orien->v[i].adj[k]-1].distancia_pai + tempo_vantagem;
+		if(g_orien->v[i].adj.size() > 0)
+		{
+			bfs(g, i);
+			aux = i + g->vertices_visitados.size() - cont;
+			cont = 0;
+			while(i<aux)
+			{
+				for(int k=0;k<g_orien->v[i].adj.size();k++)
+				{ // a lista de adjacência está por id
+					tempo_vantagem = g->v[g_orien->v[i].adj[k]-1].distancia_pai + tempo_vantagem;
+				}
+				for(int k=0;k<g->vertices_visitados.size();k++)
+				{
+					g->v[g->vertices_visitados[k]].cor = 0;
+					g->v[g->vertices_visitados[k]].distancia_pai = -1;
+					g->v[g->vertices_visitados[k]].pai = -1;
+				}
+				g->vertices_visitados.clear();
+				i++;
+				if(i-1 != g->v.size()-1)
+				{
+					bfs(g, i);
+				}
+			}
+			i--;
+			flag_entrada = 1;
 		}
+		else
+		{
+			cont++;
+		}
+		if(flag_iteracao == 0 && flag_entrada == 1)
+		{
+			min = tempo_vantagem;
+			flag_iteracao = 1;
+		}
+		else
+		{
+			if(flag_entrada == 1)
+			{
+				if(tempo_vantagem == 0)
+				{
+					return 0;
+				}
+				if(tempo_vantagem < min)
+				{
+					min = tempo_vantagem;
+				}
+
+			}
+		}
+		flag_entrada = 0;
 	}
-	return 0;
+
+	return min/2;
 
 }
 int main(int argc, char *argv[])
@@ -383,22 +440,22 @@ int main(int argc, char *argv[])
 	int inicio = clock();
 	vector <int> buffer;
 	leitura_arquivo(argv[2], &buffer);
+	
 	int n = buffer[0]; // n = de onde para onde deve ser feito o teleporte 
 	int m = buffer[1]; // m = quantidade de teleportes
 	int i=2; // começa de 2 pois já foram avaliados os dois primeiros vértices
 	int t1 = 0, t2 = 0, t3 = 0, t4 = 0;
+	
 	grafo g = nao_orientado(buffer, n, m, &i);
 	grafo g_orien = orientado(buffer, n, &i);
 	buffer.clear();
 	identifica_naves(&g, &t1, &t2, &t3, &t4);
 	int tempo_vantagem = calcula_tempo_vantagem(&g, &g_orien);
-	cout << (clock() - inicio)/CLOCKS_PER_SEC << "\n";
+	cout <<"Tempo gasto: " << (clock() - inicio)/CLOCKS_PER_SEC << "\n";
+	// salvando o arquivo
 	ofstream arquivo_saida;
 	arquivo_saida.open(argv[4]);
 	arquivo_saida << t1 << " " << t2 << " " << t3 << " " << t4 << "\n";
 	arquivo_saida << tempo_vantagem;
 	arquivo_saida.close();
-
-	
-
 }
