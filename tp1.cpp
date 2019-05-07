@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <time.h>
 
 using namespace std;
 
@@ -71,10 +70,11 @@ void imprime_lista_adj(grafo g)
 			grafo g;
 
 	*/
+	int j;
 	for(int i=0;i<g.v.size();i++)
 	{
 		cout << "ID: " << g.v[i].id << " ADJ :" "\n";
-		for(int j=0;j<g.v[i].adj.size();j++)
+		for(j=0;j<g.v[i].adj.size();j++)
 		{
 			cout << g.v[i].adj[j] << " ";
 		}
@@ -145,15 +145,13 @@ void dfs_visit(grafo *g, int i, int *tempo, componente *c){
 	g->v[i].flag = 1; // cor cinza
 	*tempo = *tempo + 1;
 	g->v[i].tempo_d = *tempo;
-	int index;
 	for(int k=0;k<g->v[i].adj.size();k++)
 	{
-		index = g->v[i].adj[k] - 1;
-		if(g->v[index].flag == 0)
+		if(g->v[g->v[i].adj[k] - 1].flag == 0)
 		{
-			g->v[index].componente = g->v[i].componente; // recebe o componente do pai
+			g->v[g->v[i].adj[k] - 1].componente = g->v[i].componente; // recebe o componente do pai
 			c->quant_vertices = c->quant_vertices + 1;
-			dfs_visit(g, index, tempo, c);
+			dfs_visit(g, g->v[i].adj[k] - 1, tempo, c);
 		}
 		c->quant_arestas = c->quant_arestas + 1;
 	}
@@ -250,7 +248,6 @@ int dfs_bipartido(grafo *g, int root, int cor, int *quant_zeros, int *quant_um, 
 			grafo g;
 			int root; que deve ser o index do vértice da componente
 	*/
-	int index, bipartido;
 	g->v[root].cor = cor; // o primeiro vértice vai ter cor 0
 	if(cor == 0)
 	{
@@ -263,14 +260,13 @@ int dfs_bipartido(grafo *g, int root, int cor, int *quant_zeros, int *quant_um, 
 	}	
 	for(int i = 0; i<g->v[root].adj.size();i++)
 	{
-		index = g->v[root].adj[i] - 1;
-		if(g->v[index].cor == -1) // não foi visitado ainda
+		if(g->v[g->v[root].adj[i] - 1].cor == -1) // não foi visitado ainda
 		{
-			bipartido = dfs_bipartido(g, index, 1-cor, quant_zeros, quant_um, grau_medio);
+			dfs_bipartido(g, g->v[root].adj[i] - 1, 1-cor, quant_zeros, quant_um, grau_medio);
 		}
 		else
 		{
-			if(g->v[root].cor == g->v[index].cor)
+			if(g->v[root].cor == g->v[g->v[root].adj[i] - 1].cor)
 			{
 				return -1;
 			}
@@ -316,8 +312,7 @@ void bfs(grafo *g, int root)
 int terceiro_tipo(grafo *g, componente *c)
 {
 	int quant_zeros = 0, quant_um = 0, grau_medio = 0;
-	int bipartido = dfs_bipartido(g, c->root, 0, &quant_zeros, &quant_um, &grau_medio);
-	if(bipartido == 0)
+	if(dfs_bipartido(g, c->root, 0, &quant_zeros, &quant_um, &grau_medio) == 0)
 	{
 		if(grau_medio/quant_zeros == quant_um)
 		{
@@ -329,7 +324,6 @@ int terceiro_tipo(grafo *g, componente *c)
 void identifica_naves(grafo *g, int *t1, int *t2, int *t3, int *t4)
 {
 	vector <componente> comp_list = dfs(g);
-	int k = 0, tempo = 0, quant_vertices;
 	for(int i=0;i<comp_list.size();i++)
 	{
 		if(primeiro_tipo(&comp_list[i]) != -1)
@@ -349,6 +343,7 @@ void identifica_naves(grafo *g, int *t1, int *t2, int *t3, int *t4)
 			*t4 = *t4 + 1;
 		}
 	}
+	comp_list.clear();
 
 }
 void inicializa_vertices(grafo *g)
@@ -363,12 +358,13 @@ void inicializa_vertices(grafo *g)
 }
 int calcula_tempo_vantagem(grafo *g, grafo *g_orien)
 {
-	for(int i=0;i<g->v.size();i++)
+	int aux = 0, min = 0, flag_iteracao = 0, flag_entrada = 0;
+	int flag_bfs = 0, cont = 0, tempo_vantagem = 0, k, i = 0;;
+	for(i=0;i<g->v.size();i++)
 	{ // preciso inicializar a cor as mesmas estão setadas depois do DFS
 		g->v[i].cor = 0;
 	}
-	int aux = 0, min = 0, flag_iteracao = 0, flag_entrada = 0, flag_bfs = 0, cont = 0, tempo_vantagem = 0, k;
-	for(int i=0;i<g->v.size();i++)
+	for(i=0;i<g->v.size();i++)
 	{ // tenho que verificar para todos os vértices
 		if(flag_entrada == 1)
 		{
@@ -441,7 +437,6 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	// o argv[4] possui o nome do arquivo de saída
-	int inicio = clock();
 	vector <int> buffer;
 	leitura_arquivo(argv[2], &buffer);
 	
@@ -455,7 +450,6 @@ int main(int argc, char *argv[])
 	buffer.clear();
 	identifica_naves(&g, &t1, &t2, &t3, &t4);
 	int tempo_vantagem = calcula_tempo_vantagem(&g, &g_orien);
-	cout <<"Tempo gasto: " << (clock() - inicio)/CLOCKS_PER_SEC << "\n";
 	// salvando o arquivo
 	ofstream arquivo_saida;
 	arquivo_saida.open(argv[4]);
