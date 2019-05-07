@@ -290,7 +290,7 @@ void bfs(grafo *g, int root)
 			int root; --> index do vértice inicial para o calculo do bfs
 	*/
 	vector <int> q; // fila de prioridades utilizada na implementação
-	int index = 0, u;
+	int u, i;
 	g->v[root].cor = 1; // inicializando a cor cinza do vértice
 	g->v[root].distancia_pai = 0; // a distância dele para ele mesmo
 	q.push_back(root); // estou adicionando o id do vértice na fila
@@ -299,16 +299,15 @@ void bfs(grafo *g, int root)
 	{
 		u = q[0]; // retirando da fila o primeiro elemento
 		q.erase(q.begin()); // retirando o elemento da fila
-		for(int i=0;i<g->v[u].adj.size();i++)
+		for(i=0;i<g->v[u].adj.size();i++)
 		{
-			index = g->v[u].adj[i] - 1;
-			if(g->v[index].cor==0) // se a cor do vértice for branco
+			if(g->v[g->v[u].adj[i] - 1].cor==0) // se a cor do vértice for branco
 			{
-				g->vertices_visitados.push_back(index);
-				g->v[index].cor = 1; // nova cor vai ser cinza
-				g->v[index].pai = g->v[u].id; // adicionando o id do par
-				g->v[index].distancia_pai = g->v[u].distancia_pai + 1;
-				q.push_back(index); // adicionando o vértice na lista
+				g->vertices_visitados.push_back(g->v[u].adj[i] - 1);
+				g->v[g->v[u].adj[i] - 1].cor = 1; // nova cor vai ser cinza
+				g->v[g->v[u].adj[i] - 1].pai = g->v[u].id; // adicionando o id do par
+				g->v[g->v[u].adj[i] - 1].distancia_pai = g->v[u].distancia_pai + 1;
+				q.push_back(g->v[u].adj[i] - 1); // adicionando o vértice na lista
 			}
 		}
 		g->v[u].cor = 2; // a cor do vértice é preto e ele já foi processado
@@ -352,25 +351,30 @@ void identifica_naves(grafo *g, int *t1, int *t2, int *t3, int *t4)
 	}
 
 }
+void inicializa_vertices(grafo *g)
+{
+	for(int k=0;k<g->vertices_visitados.size();k++)
+	{
+		g->v[g->vertices_visitados[k]].cor = 0;
+		g->v[g->vertices_visitados[k]].distancia_pai = -1;
+		g->v[g->vertices_visitados[k]].pai = -1;
+	}
+	g->vertices_visitados.clear();
+}
 int calcula_tempo_vantagem(grafo *g, grafo *g_orien)
 {
-	int tempo_vantagem = 0, flat = 0;
 	for(int i=0;i<g->v.size();i++)
-	{
+	{ // preciso inicializar a cor as mesmas estão setadas depois do DFS
 		g->v[i].cor = 0;
 	}
-	vector <int> vertices_visitados;
-	int aux = 0, min = 0, flag_iteracao = 0, flag_entrada = 0, cont = 0;
+	int aux = 0, min = 0, flag_iteracao = 0, flag_entrada = 0, cont = 0, tempo_vantagem = 0, k;
 	for(int i=0;i<g->v.size();i++)
 	{ // tenho que verificar para todos os vértices
-
-		for(int k=0;k<g->vertices_visitados.size();k++)
+		if(flag_entrada == 1)
 		{
-			g->v[g->vertices_visitados[k]].cor = 0;
-			g->v[g->vertices_visitados[k]].distancia_pai = -1;
-			g->v[g->vertices_visitados[k]].pai = -1;
+			inicializa_vertices(g);	
 		}
-		g->vertices_visitados.clear();
+		flag_entrada = 0;
 		tempo_vantagem = 0;
 		if(g_orien->v[i].adj.size() > 0)
 		{
@@ -379,19 +383,13 @@ int calcula_tempo_vantagem(grafo *g, grafo *g_orien)
 			cont = 0;
 			while(i<aux)
 			{
-				for(int k=0;k<g_orien->v[i].adj.size();k++)
-				{ // a lista de adjacência está por id
+				for(k=0;k<g_orien->v[i].adj.size();k++)
+				{
 					tempo_vantagem = g->v[g_orien->v[i].adj[k]-1].distancia_pai + tempo_vantagem;
 				}
-				for(int k=0;k<g->vertices_visitados.size();k++)
-				{
-					g->v[g->vertices_visitados[k]].cor = 0;
-					g->v[g->vertices_visitados[k]].distancia_pai = -1;
-					g->v[g->vertices_visitados[k]].pai = -1;
-				}
-				g->vertices_visitados.clear();
+				inicializa_vertices(g);
 				i++;
-				if(i-1 != g->v.size()-1)
+				if(g_orien->v[i].adj.size()>0 && i-1 != g->v.size()-1)
 				{
 					bfs(g, i);
 				}
@@ -403,29 +401,24 @@ int calcula_tempo_vantagem(grafo *g, grafo *g_orien)
 		{
 			cont++;
 		}
-		if(flag_iteracao == 0 && flag_entrada == 1)
+		if(flag_entrada == 1 && flag_iteracao > 0)
+		{
+			if(tempo_vantagem == 0)
+			{
+				return 0;
+			}
+			else if(tempo_vantagem < min)
+			{
+				min = tempo_vantagem;
+			}
+		}
+		else if(flag_iteracao == 0 && flag_entrada == 1)
 		{
 			min = tempo_vantagem;
 			flag_iteracao = 1;
 		}
-		else
-		{
-			if(flag_entrada == 1)
-			{
-				if(tempo_vantagem == 0)
-				{
-					return 0;
-				}
-				if(tempo_vantagem < min)
-				{
-					min = tempo_vantagem;
-				}
-
-			}
-		}
-		flag_entrada = 0;
 	}
-
+	cout << "Tempo Vantagem: " << min/2 << "\n";
 	return min/2;
 
 }
