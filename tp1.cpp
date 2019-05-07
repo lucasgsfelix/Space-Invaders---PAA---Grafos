@@ -367,7 +367,7 @@ int calcula_tempo_vantagem(grafo *g, grafo *g_orien)
 	{ // preciso inicializar a cor as mesmas estão setadas depois do DFS
 		g->v[i].cor = 0;
 	}
-	int aux = 0, min = 0, flag_iteracao = 0, flag_entrada = 0, cont = 0, tempo_vantagem = 0, k;
+	int aux = 0, min = 0, flag_iteracao = 0, flag_entrada = 0, flag_bfs = 0, cont = 0, tempo_vantagem = 0, k;
 	for(int i=0;i<g->v.size();i++)
 	{ // tenho que verificar para todos os vértices
 		if(flag_entrada == 1)
@@ -381,22 +381,28 @@ int calcula_tempo_vantagem(grafo *g, grafo *g_orien)
 			bfs(g, i);
 			aux = i + g->vertices_visitados.size() - cont;
 			cont = 0;
+			flag_bfs = 1;
 			while(i<aux)
 			{
-				for(k=0;k<g_orien->v[i].adj.size();k++)
+				if(flag_bfs == 1)
 				{
-					tempo_vantagem = g->v[g_orien->v[i].adj[k]-1].distancia_pai + tempo_vantagem;
+					for(k=0;k<g_orien->v[i].adj.size();k++)
+					{
+						tempo_vantagem = g->v[g_orien->v[i].adj[k]-1].distancia_pai + tempo_vantagem;
+					}
+					if(flag_iteracao > 0 && tempo_vantagem > min)
+					{
+						i = aux;
+						break;
+					}
+					inicializa_vertices(g);
 				}
-				if(flag_iteracao > 0 && tempo_vantagem > min)
-				{
-					i = aux;
-					break;
-				}
-				inicializa_vertices(g);
 				i++;
+				flag_bfs = 0;
 				if(g_orien->v[i].adj.size()>0 && i-1 != g->v.size()-1)
 				{
 					bfs(g, i);
+					flag_bfs = 1;
 				}
 			}
 			i--;
