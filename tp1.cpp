@@ -387,6 +387,11 @@ int calcula_tempo_vantagem(grafo *g, grafo *g_orien)
 				{
 					tempo_vantagem = g->v[g_orien->v[i].adj[k]-1].distancia_pai + tempo_vantagem;
 				}
+				if(flag_iteracao > 0 && tempo_vantagem > min)
+				{
+					i = aux;
+					break;
+				}
 				inicializa_vertices(g);
 				i++;
 				if(g_orien->v[i].adj.size()>0 && i-1 != g->v.size()-1)
