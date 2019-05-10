@@ -1,0 +1,13 @@
+### Trabalho da disciplina de Projeto e Análise de Algoritmos da Turma de 2019.1 ###
+### Aluno: Lucas Gabriel da Silva Félix ###
+### Professores: Vinicius Fernandes dos Santos e Sebastián Alberto Urrutia ###
+
+Para compilar e executar o programa deve-se seguir os seguintes passos:
+	./compilar.sh
+	./executar.sh entrada.in saida.out
+Podendo os parâmetros entrada.in e saida.out qualquer valor, exemplo:
+Supondo que quero testar meu algoritmo para uma entrada = 9.in e saida = saida.txt:
+	./compilar.sh
+	./executar.sh 9.in saida.txt
+
+Quaisquer dúvidas envie um e-mail para: lucasgsfelix@gmail.com
