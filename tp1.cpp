@@ -47,6 +47,14 @@ class componente{
 };
 void leitura_arquivo(const char* nome_arquivo, vector <int> *buffer)
 {
+	/* 
+		Função responsável por leitura em um arquivo e armazenamento no buffer.
+
+		Parâmetros:
+			char: nome_arquivo; nome do arquivo a ser lido
+			vector <int> buffer; buffer onde serão armazenados os dados
+
+	*/
 	ifstream file;
 	file.open(nome_arquivo);
 	if(!file){
@@ -87,6 +95,15 @@ void imprime_lista_adj(grafo g)
 }
 grafo nao_orientado(vector <int> buffer, int n, int m, int *i)
 {
+	/*
+		Função responsável pela modelagem do grafo não orientado G.
+
+		Parâmetros:
+			vector <int> buffer; que possui os dados que serão utilizados para a modelagem
+			int n; possui o número de vértices, lido do arquivo
+			int m; possui o número de teleportes que serão realizados
+			int *i; variável 
+	*/
 	grafo g;
 	g.v.resize(n);
 	int aux = 0;
@@ -109,6 +126,14 @@ grafo nao_orientado(vector <int> buffer, int n, int m, int *i)
 }
 grafo orientado(vector <int> buffer, int n, int *i)
 {
+	/*
+		Modelagem do grafo orientado G'.
+
+		Parâmetros:
+			vector <int> buffer; possui os dados que serão utilizados 
+			int n; indica as n linhas finais do artigo
+			int i; variável iteradora que já se iniciará com valor maior que zero
+	*/
 	grafo g;
 	g.v.resize(n);
 	for(int k=0;k<n;k++)
@@ -204,6 +229,11 @@ vector <componente> dfs(grafo *g){ // 0 false 1 true
 }
 int primeiro_tipo(componente *c)
 {
+	/*
+		Método responsável pela identificação de naves do primeiro tipo;
+		Parâmetros:
+			componente c; componente que possui as informações da nave
+	*/
 	if(c->min_degree == 1 && c->max_degree == 2 && c->quant_um == 2 && c->quant_vertices == (c->quant_arestas/2)+1)
 	{
 		return 0;
@@ -212,6 +242,11 @@ int primeiro_tipo(componente *c)
 }
 int segundo_tipo(componente *c)
 {
+	/*
+		Método responsável pela identificação de naves do segundo tipo;
+		Parâmetros:
+			componente c; componente que possui as informações da nave
+	*/
 	if(c->quant_vertices == (c->quant_arestas/2)+1)
 	{
 		return 0;
@@ -220,6 +255,11 @@ int segundo_tipo(componente *c)
 }
 int quarto_tipo(componente *c)
 {	
+	/*
+		Método responsável pela identificação de naves do quarto tipo;
+		Parâmetros:
+			componente c; componente que possui as informações da nave
+	*/
 	if (c->quant_arestas == c->quant_vertices*2)
 	{
 		return 0;
@@ -311,6 +351,12 @@ void bfs(grafo *g, int root)
 }
 int terceiro_tipo(grafo *g, componente *c)
 {
+	/*
+		Método responsável pela identificação de naves do terceiro tipo;
+		Parâmetros:
+			grafo *g; possui o grafo G, o qual será iterado para verificação da componente bipartida
+			componente c; componente que possui as informações da nave
+	*/
 	int quant_zeros = 0, quant_um = 0, grau_medio = 0;
 	if(dfs_bipartido(g, c->root, 0, &quant_zeros, &quant_um, &grau_medio) == 0)
 	{
@@ -323,6 +369,14 @@ int terceiro_tipo(grafo *g, componente *c)
 }
 void identifica_naves(grafo *g, int *t1, int *t2, int *t3, int *t4)
 {
+	/*
+		Método responsável pela chamada dos métodos de identificação das naves.
+
+		Parâmetros:
+			grafo g; o qual possui o grafo G
+			int t1, t2, t3, t4; os quais serão incrementadas quando for reconhecido uma nave de cada tipo
+
+	*/
 	vector <componente> comp_list = dfs(g);
 	for(int i=0;i<comp_list.size();i++)
 	{
@@ -348,6 +402,13 @@ void identifica_naves(grafo *g, int *t1, int *t2, int *t3, int *t4)
 }
 void inicializa_vertices(grafo *g)
 {
+	/*
+		Método responsável pela inicialização dos vértices, 
+		evitando conflitos quando o vértice já foi utilizado
+
+		Parâmetros:
+			grafo g; que corresponde ao grafo G
+	*/
 	for(int k=0;k<g->vertices_visitados.size();k++)
 	{
 		g->v[g->vertices_visitados[k]].cor = 0;
@@ -358,6 +419,15 @@ void inicializa_vertices(grafo *g)
 }
 int calcula_tempo_vantagem(grafo *g, grafo *g_orien)
 {
+	/*
+		Método responsável por calcular o tempo de vantagem no grafo G, 
+		dados os vértices do grafo G'.
+
+		Parâmetros:
+			grafo g; grafo G
+			grafo g_orient; grafo G'
+
+	*/
 	int aux = 0, min = 0, flag_iteracao = 0, flag_entrada = 0;
 	int flag_bfs = 0, cont = 0, tempo_vantagem = 0, k, i = 0;;
 	for(i=0;i<g->v.size();i++)
@@ -425,7 +495,7 @@ int calcula_tempo_vantagem(grafo *g, grafo *g_orien)
 			flag_iteracao = 1;
 		}
 	}
-	cout << "Tempo Vantagem: " << min/2 << "\n";
+	//cout << "Tempo Vantagem: " << min/2 << "\n";
 	return min/2;
 
 }
@@ -434,7 +504,7 @@ int main(int argc, char *argv[])
 	if(argc != 5)
 	{
 		printf("Os parametros foram passados de forma incorreta\n");
-		exit(1);
+		//exit(1);
 	}
 	// o argv[4] possui o nome do arquivo de saída
 	vector <int> buffer;
