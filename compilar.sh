@@ -1,2 +1,2 @@
 #!/bin/bash
-g++ -Ofast -faggressive-loop-optimizations -w tp1.cpp -o tp1
+g++ -Ofast -faggressive-loop-optimizations -w *.cpp -o tp1
